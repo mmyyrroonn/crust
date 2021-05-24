@@ -25,6 +25,7 @@ sp-offchain = { git = "https://github.com/paritytech/substrate", default-feature
 sp-block-builder = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.2" }
 sp-transaction-pool = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.2" }
 sp-inherents = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.2" }
+sp-consensus-aura = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.2" }
 
 frame-support = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.2" }
 frame-executive = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.2" }
@@ -34,8 +35,10 @@ pallet-randomness-collective-flip = { git = "https://github.com/paritytech/subst
 pallet-timestamp = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.2" }
 pallet-sudo = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.2" }
 pallet-transaction-payment = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.2" }
+pallet-aura = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.2" }
 
 # Cumulus dependencies
+cumulus-pallet-aura-ext = { path = "../../cumulus/pallets/aura-ext", default-features = false }
 cumulus-pallet-parachain-system = { path = "../../cumulus/pallets/parachain-system", default-features = false }
 cumulus-primitives-core = { path = "../../cumulus/primitives/core", default-features = false }
 cumulus-primitives-utility = { path = "../../cumulus/primitives/utility", default-features = false }
@@ -94,4 +97,7 @@ std = [
 	"xcm-executor/std",
 	"xstorage/std",
 	"market/std",
+	"pallet-aura/std",
+	"sp-consensus-aura/std",
+	"cumulus-pallet-aura-ext/std",
 ]

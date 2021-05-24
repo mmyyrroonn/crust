@@ -74,11 +74,14 @@ use xcm_executor::{
 use pallet_xcm::{XcmPassthrough, EnsureXcm, IsMajorityOfBody};
 use xcm::v0::Xcm;
 use frame_support::traits::Contains;
+pub use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 
 pub type SessionHandlers = ();
 
 impl_opaque_keys! {
-	pub struct SessionKeys {}
+	pub struct SessionKeys {
+		pub aura: Aura,
+	}
 }
 
 /// This runtime version.
@@ -374,6 +377,7 @@ impl pallet_xcm::Config for Runtime {
 	type XcmExecuteFilter = All<(MultiLocation, Xcm<Call>)>;
 	type XcmExecutor = XcmExecutor<XcmConfig>;
 	type XcmTeleportFilter = All<(MultiLocation, Vec<MultiAsset>)>;
+	type XcmReserveTransferFilter = ();
 	type Weigher = FixedWeightBounds<UnitWeightCost, Call>;
 }
 
@@ -471,6 +475,12 @@ impl xstorage::Config for Runtime {
 	type XcmpMessageSender = XcmRouter;
 }
 
+impl pallet_aura::Config for Runtime {
+	type AuthorityId = AuraId;
+}
+
+impl cumulus_pallet_aura_ext::Config for Runtime {}
+
 construct_runtime! {
 	pub enum Runtime where
 		Block = Block,
@@ -485,6 +495,9 @@ construct_runtime! {
 		ParachainSystem: cumulus_pallet_parachain_system::{Pallet, Call, Storage, Inherent, Event<T>, ValidateUnsigned},
 		TransactionPayment: pallet_transaction_payment::{Pallet, Storage},
 		ParachainInfo: parachain_info::{Pallet, Storage, Config, Call},
+
+		Aura: pallet_aura::{Pallet, Config<T>},
+		AuraExt: cumulus_pallet_aura_ext::{Pallet, Config},
 
 		// XCM helpers.
 		XcmpQueue: cumulus_pallet_xcmp_queue::{Pallet, Call, Storage, Event<T>},
@@ -597,6 +610,17 @@ impl_runtime_apis! {
 			SessionKeys::generate(seed)
 		}
 	}
+
+	impl sp_consensus_aura::AuraApi<Block, AuraId> for Runtime {
+		fn slot_duration() -> sp_consensus_aura::SlotDuration {
+			sp_consensus_aura::SlotDuration::from_millis(Aura::slot_duration())
+		}
+
+		fn authorities() -> Vec<AuraId> {
+			Aura::authorities()
+		}
+	}
+
 	impl cumulus_primitives_core::CollectCollationInfo<Block> for Runtime {
 		fn collect_collation_info() -> cumulus_primitives_core::CollationInfo {
 			ParachainSystem::collect_collation_info()
@@ -604,4 +628,7 @@ impl_runtime_apis! {
 	}
 }
 
-cumulus_pallet_parachain_system::register_validate_block!(Runtime, Executive);
+cumulus_pallet_parachain_system::register_validate_block!(
+	Runtime,
+	cumulus_pallet_aura_ext::BlockExecutor::<Runtime, Executive>,
+);
