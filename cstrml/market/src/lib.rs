@@ -18,6 +18,7 @@ use frame_support::{
 use sp_std::{prelude::*, convert::TryInto, collections::btree_set::BTreeSet};
 use frame_system::{self as system, ensure_signed, ensure_root};
 use sp_runtime::{SaturatedConversion, Perbill, ModuleId, traits::{Zero, CheckedMul, AccountIdConversion, Saturating}, DispatchError};
+use frame_support::storage::migration::remove_storage_prefix;
 
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
@@ -458,6 +459,11 @@ decl_module! {
             }
             add_db_reads_writes(1, 0);
             consumed_weight
+        }
+
+        fn on_runtime_upgrade() -> Weight {
+            remove_storage_prefix(b"Market", b"Files", &[]);
+            10_000
         }
 
         /// Place a storage order. The cid and file_size of this file should be provided. Extra tips is accepted.
