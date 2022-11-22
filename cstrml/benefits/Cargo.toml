@@ -14,21 +14,21 @@ codec = { package = "parity-scale-codec", default-features = false, version = "2
 rustc-hex = { default-features = false, version = "2.0.1" }
 
 # substrate frame dependencies
-frame-support = { default-features = false, git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4" }
-frame-system = { default-features = false, git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4" }
-sp-runtime = { default-features = false, git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4" }
-sp-core = { default-features = false, git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4" }
-sp-std = { default-features = false, git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4" }
-sp-io = { default-features = false, git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4" }
+frame-support = { default-features = false, git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
+frame-system = { default-features = false, git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
+sp-runtime = { default-features = false, git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
+sp-core = { default-features = false, git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
+sp-std = { default-features = false, git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
+sp-io = { default-features = false, git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
 primitives = { package = "cst-primitives", path = "../../primitives", default-features = false }
 
-frame-benchmarking = { default-features = false, optional = true, git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4" }
+frame-benchmarking = { default-features = false, optional = true, git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
 
 [dev-dependencies]
 balances = { path = "../balances", package = "cstrml-balances" }
 primitives = { package = "cst-primitives", path = "../../primitives", features = ["test"] }
 hex-literal = "0.3.1"
-frame-benchmarking = { git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4"}
+frame-benchmarking = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1"}
 
 [features]
 default = ["std"]

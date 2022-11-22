@@ -19,30 +19,30 @@ structopt = { optional = true, version = "0.3.21" }
 hex-literal = "0.3.1"
 
 # substrate client dependencies
-authority-discovery = { package = "sc-authority-discovery", git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4" }
-sc-consensus-babe = { git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4" }
-sc-finality-grandpa  = { git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4" }
-sc-basic-authorship = { git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4" }
-sc-client-api = { git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4"}
-sc-cli = { features = ["wasmtime"], optional = true, git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4" }
-sc-consensus = { git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4" }
-sc-consensus-slots = { git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4" }
-sc-executor = { features = ["wasmtime"], git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4" }
-sc-network = { git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4" }
-sc-service = { features = ["wasmtime"], git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4" }
-sc-transaction-pool = { git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4"}
+authority-discovery = { package = "sc-authority-discovery", git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
+sc-consensus-babe = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
+sc-finality-grandpa  = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
+sc-basic-authorship = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
+sc-client-api = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1"}
+sc-cli = { features = ["wasmtime"], optional = true, git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
+sc-consensus = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
+sc-consensus-slots = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
+sc-executor = { features = ["wasmtime"], git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
+sc-network = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
+sc-service = { features = ["wasmtime"], git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
+sc-transaction-pool = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1"}
 
 # substrate primitives
-sp-transaction-pool = { git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4"}
-sp-core = { git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4"}
-sp-consensus = { git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4" }
-sp-consensus-babe = { git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4" }
-sp-inherents = { git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4"}
-sp-io = { git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4"}
-sp-runtime = { git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4"}
-sp-finality-grandpa = { git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4"}
-frame-benchmarking-cli = { optional = true, git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4" }
-frame-benchmarking = { git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4"}
+sp-transaction-pool = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1"}
+sp-core = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1"}
+sp-consensus = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
+sp-consensus-babe = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
+sp-inherents = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1"}
+sp-io = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1"}
+sp-runtime = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1"}
+sp-finality-grandpa = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1"}
+frame-benchmarking-cli = { optional = true, git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
+frame-benchmarking = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1"}
 
 # crust runtime modules
 crust-runtime = { path = "../runtime", version = "1.0.0" }
@@ -53,8 +53,8 @@ primitives = { package = "cst-primitives", path = "../primitives", version = "1.
 crust-rpc = { path =  "../rpc", version = "1.0.0" }
 
 [build-dependencies]
-substrate-build-script-utils = { git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4"}
-frame-benchmarking-cli = { optional = true, git = "https://github.com/crustio/substrate", rev = "3971a18dd746ff5190d2d274cfcdaf7dae5f8ce4" }
+substrate-build-script-utils = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1"}
+frame-benchmarking-cli = { optional = true, git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
 
 [features]
 default = [ "cli" ]
