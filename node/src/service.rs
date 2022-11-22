@@ -13,6 +13,7 @@ use sc_executor::native_executor_instance;
 pub use sc_executor::NativeExecutor;
 use sp_inherents::InherentDataProviders;
 use sc_consensus::LongestChain;
+use telemetry::TelemetrySpan;
 
 // Our native executor instance.
 // TODO: Bring benchmarks back
@@ -90,7 +91,7 @@ pub fn new_partial(config: &Configuration) -> Result<
         client.clone(),
         select_chain.clone(),
         inherent_data_providers.clone(),
-        &task_manager.spawn_handle(),
+        &task_manager.spawn_essential_handle(),
         config.prometheus_registry(),
         sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone()),
     )?;
@@ -165,6 +166,9 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError>
         other: (rpc_extensions_builder, import_setup, rpc_setup)
     } = new_partial(&config)?;
 
+    let telemetry_span = TelemetrySpan::new();
+	let _telemetry_span_entered = telemetry_span.enter();
+
     let role = config.role.clone();
     let force_authoring = config.force_authoring;
     let disable_grandpa = config.disable_grandpa;
@@ -206,6 +210,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError>
         remote_blockchain: None,
         network_status_sinks,
         system_rpc_tx,
+        telemetry_span: Some(telemetry_span.clone()),
     })?;
 
     let (babe_block_import, grandpa_link, babe_link) = import_setup;
@@ -234,6 +239,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError>
             backoff_authoring_blocks,
             babe_link,
             can_author_with,
+            block_proposal_slot_portion: sc_consensus_babe::SlotProportion::new(2f32 / 3f32),
         };
 
         let babe = sc_consensus_babe::start_babe(babe_config)?;
@@ -285,7 +291,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError>
         name: Some(name),
         observer_enabled: false,
         keystore,
-        is_authority: role.is_network_authority(),
+        is_authority: role.is_authority(),
     };
 
     if !disable_grandpa {
@@ -427,7 +433,7 @@ pub fn new_light(mut config: Configuration) -> Result<TaskManager, ServiceError>
         client.clone(),
         select_chain.clone(),
         inherent_data_providers.clone(),
-        &task_manager.spawn_handle(),
+        &task_manager.spawn_essential_handle(),
         config.prometheus_registry(),
         sp_consensus::NeverCanAuthor,
     )?;
@@ -456,6 +462,9 @@ pub fn new_light(mut config: Configuration) -> Result<TaskManager, ServiceError>
         pool: transaction_pool.clone(),
     };
 
+    let telemetry_span = TelemetrySpan::new();
+	let _telemetry_span_entered = telemetry_span.enter();
+
     let rpc_extensions = crust_rpc::create_light(light_deps);
 
     let _ = sc_service::spawn_tasks(sc_service::SpawnTasksParams {
@@ -471,6 +480,7 @@ pub fn new_light(mut config: Configuration) -> Result<TaskManager, ServiceError>
         network,
         network_status_sinks,
         system_rpc_tx,
+        telemetry_span: Some(telemetry_span.clone()),
     })?;
 
     network_starter.start_network();
