@@ -276,7 +276,7 @@ impl swork::Config for Test {
 }
 
 parameter_types! {
-    pub const StakingModuleId: ModuleId = ModuleId(*b"cstaking");
+    pub const StakingPalletId: PalletId = PalletId(*b"cstaking");
     pub const SessionsPerEra: SessionIndex = 3;
     pub const BondingDuration: EraIndex = 3;
     pub const MaxGuarantorRewardedPerValidator: u32 = 4;
@@ -286,7 +286,7 @@ parameter_types! {
 }
 
 impl Config for Test {
-    type ModuleId = StakingModuleId;
+    type PalletId = StakingPalletId;
     type Currency = Balances;
     type UnixTime = Timestamp;
     type CurrencyToVote = CurrencyToVoteHandler;
@@ -318,12 +318,12 @@ frame_support::construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
-		System: frame_system::{Module, Call, Config, Storage, Event<T>},
-		Timestamp: pallet_timestamp::{Module, Call, Storage, Inherent},
-		Balances: balances::{Module, Call, Storage, Config<T>, Event<T>},
-		Staking: staking::{Module, Call, Config<T>, Storage, Event<T>},
-		Session: pallet_session::{Module, Call, Storage, Event, Config<T>},
-		Swork: swork::{Module, Call, Storage, Event<T>, Config<T>},
+		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
+		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
+		Balances: balances::{Pallet, Call, Storage, Config<T>, Event<T>},
+		Staking: staking::{Pallet, Call, Config<T>, Storage, Event<T>},
+		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>},
+		Swork: swork::{Pallet, Call, Storage, Event<T>, Config<T>},
 	}
 );
 

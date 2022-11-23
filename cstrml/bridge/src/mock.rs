@@ -27,9 +27,9 @@ frame_support::construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
-		System: frame_system::{Module, Call, Config, Storage, Event<T>},
-		Balances: balances::{Module, Call, Storage, Config<T>, Event<T>},
-		Bridge: bridge::{Module, Call, Storage, Event<T>},
+		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
+		Balances: balances::{Pallet, Call, Storage, Config<T>, Event<T>},
+		Bridge: bridge::{Pallet, Call, Storage, Event<T>},
 	}
 );
 
@@ -105,7 +105,7 @@ pub const ENDOWED_BALANCE: u64 = 100_000_000;
 pub const TEST_THRESHOLD: u32 = 2;
 
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	let bridge_id = ModuleId(*b"crust/bg").into_account();
+	let bridge_id = PalletId(*b"crust/bg").into_account();
 	let mut t = frame_system::GenesisConfig::default()
 		.build_storage::<Test>()
 		.unwrap();

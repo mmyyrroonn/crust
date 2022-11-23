@@ -29,7 +29,7 @@ use frame_support::{
 };
 use pallet_session::historical;
 use sp_runtime::{
-    Perbill, Permill, RuntimeDebug, SaturatedConversion, ModuleId,
+    Perbill, Permill, RuntimeDebug, SaturatedConversion, PalletId,
     traits::{
         Convert, Zero, One, StaticLookup, Saturating, AtLeast32Bit,
         CheckedAdd, CheckedSub, AtLeast32BitUnsigned
@@ -410,7 +410,7 @@ impl<T: Config> SessionInterface<<T as frame_system::Config>::AccountId> for T w
 
 pub trait Config: frame_system::Config {
     /// The staking's module id, used for staking pot
-    type ModuleId: Get<ModuleId>;
+    type PalletId: Get<PalletId>;
     /// The staking balance.
     type Currency: UsableCurrency<Self::AccountId, Moment = Self::BlockNumber>;
 
@@ -817,7 +817,7 @@ decl_module! {
         const MaxGuarantorRewardedPerValidator: u32 = T::MaxGuarantorRewardedPerValidator::get();
 
         /// The staking's module id, used for deriving its sovereign account ID.
-        const ModuleId: ModuleId = T::ModuleId::get();
+        const PalletId: PalletId = T::PalletId::get();
 
         /// Total era duration for once dsm staking pot.
         const MarketStakingPotDuration: u32 = T::MarketStakingPotDuration::get();
@@ -1593,7 +1593,7 @@ impl<T: Config> Module<T> {
             |b: BalanceOf<T>| <T::CurrencyToVote as Convert<BalanceOf<T>, u128>>::convert(b);
         if let Some(active_era) = Self::active_era() {
             let total_effective_stake = <ErasTotalStakes<T>>::get(&active_era.index);
-            return Some(Permill::from_rational_approximation(to_num(total_effective_stake), to_num(total_issuance)));
+            return Some(Permill::from_rational(to_num(total_effective_stake), to_num(total_issuance)));
         }
         None
     }
@@ -1851,7 +1851,7 @@ impl<T: Config> Module<T> {
 
         // 3. Retrieve total stakes and total staking reward
         let era_total_stakes = <ErasTotalStakes<T>>::get(&era);
-        let staking_reward = Perbill::from_rational_approximation(to_num(exposure.total), to_num(era_total_stakes)) * total_era_staking_payout;
+        let staking_reward = Perbill::from_rational(to_num(exposure.total), to_num(era_total_stakes)) * total_era_staking_payout;
         total_reward = total_reward.saturating_add(staking_reward);
         let total = exposure.total.max(One::one());
         // 4. Calculate guarantee rewards for staking
@@ -1859,7 +1859,7 @@ impl<T: Config> Module<T> {
         let mut guarantee_rewards = Zero::zero();
         // 5. Pay staking reward to guarantors
         for i in &exposure.others {
-            let reward_ratio = Perbill::from_rational_approximation(i.value, total);
+            let reward_ratio = Perbill::from_rational(i.value, total);
             // Reward guarantors
             guarantee_rewards += reward_ratio * estimated_guarantee_rewards;
             if let Some(imbalance) = Self::make_payout(
@@ -2044,7 +2044,7 @@ impl<T: Config> Module<T> {
                 for (v, p) in points.individual.iter() {
                     if *p != 0u32 {
                         let authoring_reward =
-                            Perbill::from_rational_approximation(*p, points.total) * total_authoring_payout;
+                            Perbill::from_rational(*p, points.total) * total_authoring_payout;
                         <ErasAuthoringPayout<T>>::insert(&active_era_index, v, authoring_reward);
                     }
                 }
@@ -2126,7 +2126,7 @@ impl<T: Config> Module<T> {
     fn calculate_market_payout(active_era: EraIndex) -> BalanceOf<T> {
         let total_dsm_staking_payout = T::MarketStakingPot::withdraw_staking_pot();
         let duration = T::MarketStakingPotDuration::get();
-        let dsm_staking_payout_per_era = Perbill::from_rational_approximation(1, duration) * total_dsm_staking_payout;
+        let dsm_staking_payout_per_era = Perbill::from_rational(1, duration) * total_dsm_staking_payout;
         // Reward starts from this era.
         for i in 0..duration {
             <ErasMarketPayout<T>>::mutate(active_era + i, |payout| match *payout {
@@ -2243,7 +2243,7 @@ impl<T: Config> Module<T> {
                     Zero::zero(),
                     |acc, ie| acc.saturating_add(ie.value)
                 ));
-            let valid_votes_ratio = Perbill::from_rational_approximation(stake_limit, total_stakes).min(Perbill::one());
+            let valid_votes_ratio = Perbill::from_rational(stake_limit, total_stakes).min(Perbill::one());
 
             // 2. Calculate validator valid stake
             let own_stake = valid_votes_ratio * v_ledger.active;
@@ -2420,8 +2420,8 @@ impl<T: Config> Module<T> {
     //     // 1. Construct random seed, 👼 bless the randomness
     //     // seed = [ block_hash, phrase ]
     //     let phrase = b"candidates_shuffle";
-    //     let bn = <frame_system::Module<T>>::block_number();
-    //     let bh: T::Hash = <frame_system::Module<T>>::block_hash(bn);
+    //     let bn = <frame_system::Pallet<T>>::block_number();
+    //     let bh: T::Hash = <frame_system::Pallet<T>>::block_hash(bn);
     //     let seed = [
     //         &bh.as_ref()[..],
     //         &phrase.encode()[..]
@@ -2515,7 +2515,7 @@ impl<T: Config + pallet_authorship::Config>
     }
     fn note_uncle(author: T::AccountId, _age: T::BlockNumber) {
         Self::reward_by_ids(vec![
-            (<pallet_authorship::Module<T>>::author(), 2),
+            (<pallet_authorship::Pallet<T>>::author(), 2),
             (author, 1),
         ])
     }

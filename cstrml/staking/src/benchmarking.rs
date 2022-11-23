@@ -25,7 +25,7 @@ use sp_io::hashing::blake2_256;
 use frame_system::RawOrigin;
 use frame_benchmarking::{benchmarks, account};
 
-use crate::Module as Staking;
+use crate::Pallet as Staking;
 
 const SEED: u32 = 0;
 const ACCOUNT_BALANCE_RATIO: u32 = 10000000;

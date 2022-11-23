@@ -1,7 +1,7 @@
 // Copyright (C) 2019-2021 Crust Network Technologies Ltd.
 // This file is part of Crust.
 
-//! Module to process claims from Ethereum addresses.
+//! Pallet to process claims from Ethereum addresses.
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use sp_std::{prelude::*, convert::TryInto};
@@ -189,7 +189,7 @@ decl_module! {
 
             // 5. Count the total unlock period => Count the total unlock amount => Refresh the remaining locked amount
             let unlock_peroids = curr_period.saturating_sub(unlock_from).saturating_sub(lock.lock_type.delay) / T::UnlockPeriod::get();
-            let unlock_amount = Perbill::from_rational_approximation(unlock_peroids, lock.lock_type.lock_period) * lock.total;
+            let unlock_amount = Perbill::from_rational(unlock_peroids, lock.lock_type.lock_period) * lock.total;
             let locked_amount = lock.total - unlock_amount;
 
             // 6. Update the lock
@@ -204,7 +204,7 @@ decl_module! {
 
 impl<T: Config> Module<T> {
     fn get_current_block_number() -> BlockNumber {
-        let current_block_number = <frame_system::Module<T>>::block_number();
+        let current_block_number = <frame_system::Pallet<T>>::block_number();
         TryInto::<u32>::try_into(current_block_number).ok().unwrap()
     }
 

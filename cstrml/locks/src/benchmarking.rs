@@ -11,7 +11,7 @@ use sp_std::vec;
 const SEED: u32 = 0;
 const ACCOUNT_INIT_BALANCE: u32 = 1_000_000_000;
 
-use crate::Module as Locks;
+use crate::Pallet as Locks;
 
 fn create_funded_user<T: Config>(string: &'static str, n: u32) -> T::AccountId {
     let user = account(string, n, SEED);
@@ -23,9 +23,9 @@ fn create_funded_user<T: Config>(string: &'static str, n: u32) -> T::AccountId {
 benchmarks! {
     unlock {
         let user = create_funded_user::<T>("user", 100);
-        frame_system::Module::<T>::set_block_number(100u32.into());
+        frame_system::Pallet::<T>::set_block_number(100u32.into());
         Locks::<T>::issue_and_set_lock(&user, &(T::Currency::minimum_balance() * 1800u32.into()), CRU18);
-        frame_system::Module::<T>::set_block_number(30000000u32.into());
+        frame_system::Pallet::<T>::set_block_number(30000000u32.into());
         Locks::<T>::set_unlock_from(RawOrigin::Root.into(), 100u32.into()).expect("Something wrong during set unlock from");
     }: _(RawOrigin::Signed(user.clone()))
     verify {

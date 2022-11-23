@@ -420,7 +420,7 @@ decl_module! {
         pub fn clear_expired_code(origin, expired_code: SworkerCode) {
             let _ = ensure_signed(origin)?;
             if let Some(expire_block) = Self::codes(&expired_code) {
-                let curr_bn = <system::Module<T>>::block_number();
+                let curr_bn = <system::Pallet<T>>::block_number();
                 ensure!(expire_block < curr_bn, Error::<T>::CodeNotExpired);
                 <Codes<T>>::remove(&expired_code);
                 Self::deposit_event(RawEvent::RemoveCodeSuccess(expired_code));
@@ -1252,7 +1252,7 @@ impl<T: Config> Module<T> {
     }
 
     fn get_legal_codes() -> Vec<SworkerCode> {
-        let curr_bn = <system::Module<T>>::block_number();
+        let curr_bn = <system::Pallet<T>>::block_number();
         <Codes<T>>::iter().filter_map(
             |(key, bn)| {
                 if bn > curr_bn {
@@ -1277,7 +1277,7 @@ impl<T: Config> Module<T> {
     ) -> DispatchResult {
         // 1. Check block hash
         let block_number: T::BlockNumber = wr_block_number.try_into().ok().unwrap();
-        let block_hash = <system::Module<T>>::block_hash(block_number)
+        let block_hash = <system::Pallet<T>>::block_hash(block_number)
             .as_ref()
             .to_vec();
         ensure!(
@@ -1408,7 +1408,7 @@ impl<T: Config> Module<T> {
     }
 
     fn get_current_block_number() -> BlockNumber {
-        let current_block_number = <system::Module<T>>::block_number();
+        let current_block_number = <system::Pallet<T>>::block_number();
         TryInto::<u32>::try_into(current_block_number).ok().unwrap()
     }
 

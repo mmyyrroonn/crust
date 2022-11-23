@@ -213,7 +213,7 @@ fn claim_pot_should_work() {
         assert_ok!(CrustClaims::mint_claim(Origin::signed(1), tx_hash.clone(), eth_addr.clone(), 100));
         assert_noop!(
             CrustClaims::claim(Origin::none(), 1, tx_hash.clone(), sig.clone()),
-            DispatchError::Module {
+            DispatchError::Pallet {
                 index: 1,
                 error: 3,
                 message: Some("InsufficientBalance")
@@ -238,7 +238,7 @@ fn claim_cru18_should_work() {
         assert_eq!(Balances::locks(&1)[0].id, *b"crulock ");
         assert_noop!(
             CrustClaims::claim_cru18(Origin::root(), 1, 100),
-            DispatchError::Module {
+            DispatchError::Pallet {
                 index: 2,
                 error: 4,
                 message: Some("AlreadyBeClaimed")

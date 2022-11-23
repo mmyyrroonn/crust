@@ -301,7 +301,7 @@ impl<T: Config> BenefitInterface<<T as frame_system::Config>::AccountId, Balance
     fn get_market_funds_ratio(who: &<T as frame_system::Config>::AccountId) -> Perbill {
         let market_benefit = Self::market_benefits(who);
         if !market_benefit.active_funds.is_zero() {
-            return Perbill::from_rational_approximation(market_benefit.active_funds, Self::current_benefits().total_market_active_funds);
+            return Perbill::from_rational(market_benefit.active_funds, Self::current_benefits().total_market_active_funds);
         }
         return Perbill::zero();
     }
@@ -642,7 +642,7 @@ impl<T: Config> Module<T> {
     }
 
     pub fn calculate_fee_reduction_quota(market_active_funds: BalanceOf<T>, total_market_active_funds: BalanceOf<T>, total_fee_reduction_quota: BalanceOf<T>) -> BalanceOf<T> {
-        Perbill::from_rational_approximation(market_active_funds, total_market_active_funds) * total_fee_reduction_quota
+        Perbill::from_rational(market_active_funds, total_market_active_funds) * total_fee_reduction_quota
     }
 
     pub fn calculate_total_fee_reduction_count(active_funds: &BalanceOf<T>) -> u32 {

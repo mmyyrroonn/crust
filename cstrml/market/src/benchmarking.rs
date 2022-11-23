@@ -12,7 +12,7 @@ use sp_std::vec;
 const SEED: u32 = 0;
 const ACCOUNT_INIT_BALANCE: u32 = 1_000_000_000;
 
-use crate::Module as Market;
+use crate::Pallet as Market;
 
 fn create_funded_user<T: Config>(string: &'static str, n: u32) -> T::AccountId {
     let user = account(string, n, SEED);
@@ -57,7 +57,7 @@ benchmarks! {
         let file_size: u64 = 10;
         let pub_key = vec![1];
         <self::FilesV2<T>>::insert(&cid, build_market_file_v2::<T>(&user, &pub_key, file_size, 300, 1000, 400, 1000u32.into()));
-        system::Module::<T>::set_block_number(600u32.into());
+        system::Pallet::<T>::set_block_number(600u32.into());
     }: _(RawOrigin::Signed(user.clone()), cid.clone(), file_size, T::Currency::minimum_balance() * 10u32.into(), vec![])
     verify {
         assert_eq!(Market::<T>::filesv2(&cid).unwrap_or_default().calculated_at, 400);
@@ -69,8 +69,8 @@ benchmarks! {
         let file_size: u64 = 10;
         let pub_key = vec![1];
         <self::FilesV2<T>>::insert(&cid, build_market_file_v2::<T>(&user, &pub_key, file_size, 300, 1000, 400, 1000u32.into()));
-        system::Module::<T>::set_block_number(2600u32.into());
-        <T as crate::Config>::Currency::make_free_balance_be(&crate::Module::<T>::storage_pot(), T::Currency::minimum_balance() * 2000u32.into());
+        system::Pallet::<T>::set_block_number(2600u32.into());
+        <T as crate::Config>::Currency::make_free_balance_be(&crate::Pallet::<T>::storage_pot(), T::Currency::minimum_balance() * 2000u32.into());
     }: _(RawOrigin::Signed(user.clone()), cid.clone())
     verify {
         assert_eq!(Market::<T>::filesv2(&cid).is_none(), true);

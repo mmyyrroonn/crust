@@ -11,7 +11,7 @@ use sp_std::vec;
 const SEED: u32 = 0;
 const ACCOUNT_INIT_BALANCE: u32 = 1_000_000_000;
 
-use crate::Module as CSMLocking;
+use crate::Pallet as CSMLocking;
 
 fn create_funded_user<T: Config>(string: &'static str, n: u32) -> T::AccountId {
     let user = account(string, n, SEED);
@@ -48,9 +48,9 @@ benchmarks! {
     withdraw_unbonded {
         let user = create_funded_user::<T>("user", 100);
         CSMLocking::<T>::bond(RawOrigin::Signed(user.clone()).into(), T::Currency::minimum_balance() * 2000u32.into()).expect("Something wrong during bonding");
-        frame_system::Module::<T>::set_block_number(100u32.into());
+        frame_system::Pallet::<T>::set_block_number(100u32.into());
         CSMLocking::<T>::unbond(RawOrigin::Signed(user.clone()).into(), T::Currency::minimum_balance() * 1000u32.into()).expect("Something wrong during bonding");
-        frame_system::Module::<T>::set_block_number(30000000u32.into());
+        frame_system::Pallet::<T>::set_block_number(30000000u32.into());
     }: _(RawOrigin::Signed(user.clone()))
     verify {
         assert_eq!(CSMLocking::<T>::ledger(&user).total, T::Currency::minimum_balance() * 1000u32.into());

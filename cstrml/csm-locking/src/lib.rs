@@ -344,7 +344,7 @@ decl_module! {
 
 impl<T: Config> Module<T> {
     fn get_current_block_number() -> BlockNumber {
-        let current_block_number = <frame_system::Module<T>>::block_number();
+        let current_block_number = <frame_system::Pallet<T>>::block_number();
         TryInto::<u32>::try_into(current_block_number).ok().unwrap()
     }
 

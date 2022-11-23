@@ -67,11 +67,11 @@ impl locks::Config for Test {
 }
 
 parameter_types!{
-    pub const ClaimModuleId: ModuleId = ModuleId(*b"crclaims");
+    pub const ClaimPalletId: PalletId = PalletId(*b"crclaims");
     pub Prefix: &'static [u8] = b"Pay RUSTs to the TEST account:";
 }
 impl Config for Test {
-    type ModuleId = ClaimModuleId;
+    type PalletId = ClaimPalletId;
     type Event = ();
     type Currency = Balances;
     type Prefix = Prefix;
@@ -87,10 +87,10 @@ frame_support::construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
-		System: frame_system::{Module, Call, Config, Storage, Event<T>},
-		Balances: balances::{Module, Call, Storage, Config<T>, Event<T>},
-        CrustClaims: claims::{Module, Call, Storage, Event<T>, ValidateUnsigned},
-        CrustLocks: locks::{Module, Call, Storage, Event<T>, Config<T>},
+		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
+		Balances: balances::{Pallet, Call, Storage, Config<T>, Event<T>},
+        CrustClaims: claims::{Pallet, Call, Storage, Event<T>, ValidateUnsigned},
+        CrustLocks: locks::{Pallet, Call, Storage, Event<T>, Config<T>},
 	}
 );
 

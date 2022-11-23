@@ -11,7 +11,7 @@ use sp_std::vec;
 const SEED: u32 = 0;
 const ACCOUNT_INIT_BALANCE: u32 = 1_000_000_000;
 
-use crate::Module as Benefits;
+use crate::Pallet as Benefits;
 
 fn create_funded_user<T: Config>(string: &'static str, n: u32) -> T::AccountId {
     let user = account(string, n, SEED);

@@ -177,7 +177,7 @@ impl BenefitInterface<AccountId, BalanceOf<Test>, NegativeImbalanceOf<Test>> for
 
     fn get_market_funds_ratio(_: &AccountId) -> Perbill {
         let (active_funds, total_funds) = DiscountRatio::get();
-        Perbill::from_rational_approximation(active_funds, total_funds)
+        Perbill::from_rational(active_funds, total_funds)
     }
 }
 
@@ -199,7 +199,7 @@ impl swork::Config for Test {
 
 parameter_types! {
     /// Unit is pico
-    pub const MarketModuleId: ModuleId = ModuleId(*b"crmarket");
+    pub const MarketPalletId: PalletId = PalletId(*b"crmarket");
     pub const FileDuration: BlockNumber = 1000;
     pub const LiquidityDuration: BlockNumber = 1000;
     pub const FileReplica: u32 = 4;
@@ -215,8 +215,8 @@ parameter_types! {
 }
 
 impl Config for Test {
-    type ModuleId = MarketModuleId;
-    type Currency = balances::Module<Self>;
+    type PalletId = MarketPalletId;
+    type Currency = balances::Pallet<Self>;
     type SworkerInterface = Swork;
     type BenefitInterface = TestBenefitInterface;
     type Event = ();
@@ -244,10 +244,10 @@ frame_support::construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
-		System: frame_system::{Module, Call, Config, Storage, Event<T>},
-		Balances: balances::{Module, Call, Storage, Config<T>, Event<T>},
-		Swork: swork::{Module, Call, Storage, Event<T>, Config<T>},
-		Market: market::{Module, Call, Storage, Event<T>, Config},
+		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
+		Balances: balances::{Pallet, Call, Storage, Config<T>, Event<T>},
+		Swork: swork::{Pallet, Call, Storage, Event<T>, Config<T>},
+		Market: market::{Pallet, Call, Storage, Event<T>, Config},
 	}
 );
 

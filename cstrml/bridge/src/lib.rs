@@ -16,7 +16,7 @@ use frame_support::{
 use frame_system::{self as system, ensure_signed};
 use sp_core::U256;
 use sp_runtime::traits::{AccountIdConversion, Dispatchable};
-use sp_runtime::{RuntimeDebug, ModuleId};
+use sp_runtime::{RuntimeDebug, PalletId};
 use sp_std::prelude::*;
 use sp_std::vec;
 
@@ -28,8 +28,8 @@ mod mock;
 mod tests;
 
 const DEFAULT_RELAYER_THRESHOLD: u32 = 1;
-const MODULE_ID: ModuleId = ModuleId(*b"crust/bg");
-const ELROND_ID: ModuleId = ModuleId(*b"elrondbg");
+const MODULE_ID: PalletId = PalletId(*b"crust/bg");
+const ELROND_ID: PalletId = PalletId(*b"elrondbg");
 
 
 /// Helper function to concatenate a chain ID and some bytes to produce a resource ID.

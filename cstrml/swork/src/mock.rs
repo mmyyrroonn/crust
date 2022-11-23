@@ -11,7 +11,7 @@ pub use frame_support::{
 };
 pub use sp_core::{crypto::{AccountId32, Ss58Codec}, H256};
 use sp_runtime::{
-    testing::Header, ModuleId, DispatchError,
+    testing::Header, PalletId, DispatchError,
     traits::{BlakeTwo256, IdentityLookup},
     Perbill,
 };
@@ -140,7 +140,7 @@ impl balances::Config for Test {
 
 parameter_types! {
     /// Unit is pico
-    pub const MarketModuleId: ModuleId = ModuleId(*b"crmarket");
+    pub const MarketPalletId: PalletId = PalletId(*b"crmarket");
     pub const FileDuration: BlockNumber = 1000;
     pub const LiquidityDuration: BlockNumber = 1000;
     pub const FileReplica: u32 = 4;
@@ -156,8 +156,8 @@ parameter_types! {
 }
 
 impl market::Config for Test {
-    type ModuleId = MarketModuleId;
-    type Currency = balances::Module<Self>;
+    type PalletId = MarketPalletId;
+    type Currency = balances::Pallet<Self>;
     type SworkerInterface = Swork;
     type BenefitInterface = TestBenefitInterface;
     type Event = ();
@@ -221,7 +221,7 @@ parameter_types! {
 }
 
 impl Config for Test {
-    type Currency = balances::Module<Self>;
+    type Currency = balances::Pallet<Self>;
     type Event = ();
     type PunishmentSlots = PunishmentSlots;
     type Works = TestWorksInterface;
@@ -240,10 +240,10 @@ frame_support::construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
-		System: frame_system::{Module, Call, Config, Storage, Event<T>},
-		Balances: balances::{Module, Call, Storage, Config<T>, Event<T>},
-		Swork: swork::{Module, Call, Storage, Event<T>, Config<T>},
-		Market: market::{Module, Call, Storage, Event<T>, Config},
+		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
+		Balances: balances::{Pallet, Call, Storage, Config<T>, Event<T>},
+		Swork: swork::{Pallet, Call, Storage, Event<T>, Config<T>},
+		Market: market::{Pallet, Call, Storage, Event<T>, Config},
 	}
 );
 

@@ -10,7 +10,7 @@ use frame_support::{ord_parameter_types, parameter_types, weights::Weight};
 use frame_system::{self as system};
 use sp_core::H256;
 use sp_runtime::{
-	testing::Header, ModuleId,
+	testing::Header, PalletId,
 	traits::{AccountIdConversion, BlakeTwo256, IdentityLookup},
 	Perbill,
 };
@@ -28,11 +28,11 @@ frame_support::construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
-		System: frame_system::{Module, Call, Config, Storage, Event<T>},
-		Balances: balances::{Module, Call, Storage, Config<T>, Event<T>},
-		Bridge: bridge::{Module, Call, Storage, Event<T>},
-		BridgeTransfer: bridge_transfer::{Module, Call, Storage, Event<T>},
-		Timestamp: pallet_timestamp::{Module, Call, Storage, Inherent},
+		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
+		Balances: balances::{Pallet, Call, Storage, Config<T>, Event<T>},
+		Bridge: bridge::{Pallet, Call, Storage, Event<T>},
+		BridgeTransfer: bridge_transfer::{Pallet, Call, Storage, Event<T>},
+		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
 	}
 );
 
@@ -126,8 +126,8 @@ pub const RELAYER_C: u64 = 0x4;
 pub const ENDOWED_BALANCE: u64 = 100_000_000;
 
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	let bridge_id = ModuleId(*b"crust/bg").into_account();
-	let elrond_id = ModuleId(*b"elrondbg").into_account();
+	let bridge_id = PalletId(*b"crust/bg").into_account();
+	let elrond_id = PalletId(*b"elrondbg").into_account();
 	let mut t = frame_system::GenesisConfig::default()
 		.build_storage::<Test>()
 		.unwrap();

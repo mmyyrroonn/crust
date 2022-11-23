@@ -23,7 +23,7 @@ use sp_runtime::{Perquintill, FixedPointNumber, traits::{
 }};
 use sp_runtime::{
     create_runtime_str, generic, impl_opaque_keys,
-    Permill, Percent, ApplyExtrinsicResult, Perbill, KeyTypeId, ModuleId,
+    Permill, Percent, ApplyExtrinsicResult, Perbill, KeyTypeId, PalletId,
     transaction_validity::{TransactionValidity, TransactionSource, TransactionPriority}
 };
 use sp_std::prelude::*;
@@ -207,6 +207,7 @@ impl frame_system::Config for Runtime {
     type BlockWeights = RuntimeBlockWeights;
     type BlockLength = RuntimeBlockLength;
     type SS58Prefix = SS58Prefix;
+    type OnSetCode = ();
 }
 
 parameter_types! {
@@ -278,10 +279,6 @@ impl<C> frame_system::offchain::SendTransactionTypes<C> for Runtime where
 }
 
 parameter_types! {
-    pub const SessionDuration: BlockNumber = EPOCH_DURATION_IN_BLOCKS as _;
-}
-
-parameter_types! {
 	pub StakingUnsignedPriority: TransactionPriority =
 		Perbill::from_percent(90) * TransactionPriority::max_value();
 	pub const ImOnlineUnsignedPriority: TransactionPriority = TransactionPriority::max_value();
@@ -292,7 +289,7 @@ impl pallet_im_online::Config for Runtime {
     type Event = Event;
     type ValidatorSet = Historical;
     type ReportUnresponsiveness = Offences;
-    type SessionDuration = SessionDuration;
+	type NextSessionRotation = Babe;
     type UnsignedPriority = ImOnlineUnsignedPriority;
     type WeightInfo = weights::pallet_im_online::WeightInfo<Runtime>;
 }
@@ -393,7 +390,7 @@ impl pallet_session::historical::Config for Runtime {
 }
 
 parameter_types! {
-    pub const StakingModuleId: ModuleId = ModuleId(*b"cstaking");
+    pub const StakingPalletId: PalletId = PalletId(*b"cstaking");
     // 6 sessions in an era (6 hours).
     pub const SessionsPerEra: SessionIndex = 6;
     // 112 eras for unbonding (28 days).
@@ -411,7 +408,7 @@ parameter_types! {
 }
 
 impl staking::Config for Runtime {
-    type ModuleId = StakingModuleId;
+    type PalletId = StakingPalletId;
     type Currency = Balances;
     type UnixTime = Timestamp;
 
@@ -437,15 +434,10 @@ impl staking::Config for Runtime {
     type WeightInfo = staking::weight::WeightInfo;
 }
 
-parameter_types! {
-    pub OffencesWeightSoftLimit: Weight = Perbill::from_percent(60) * MaximumBlockWeight::get();
-}
-
 impl pallet_offences::Config for Runtime {
     type Event = Event;
     type IdentificationTuple = pallet_session::historical::IdentificationTuple<Self>;
     type OnOffenceHandler = Staking;
-    type WeightSoftLimit = OffencesWeightSoftLimit;
 }
 
 parameter_types! {
@@ -458,13 +450,14 @@ parameter_types! {
 	pub const ProposalBondMinimum: Balance = 10 * DOLLARS;
 	pub const SpendPeriod: BlockNumber = 7 * DAYS;
 	pub const Burn: Permill = Permill::from_perthousand(2);
-	pub const TreasuryModuleId: ModuleId = ModuleId(*b"py/trsry");
+	pub const TreasuryPalletId: PalletId = PalletId(*b"py/trsry");
 
 	pub const TipCountdown: BlockNumber = 1 * DAYS;
 	pub const TipFindersFee: Percent = Percent::from_percent(0);
 	pub const TipReportDepositBase: Balance = 1 * DOLLARS;
 	pub const DataDepositPerByte: Balance = 1 * CENTS;
 	pub const MaximumReasonLength: u32 = 16384;
+    pub const MaxApprovals: u32 = 100;
 	// pub const BountyDepositBase: Balance = 1 * DOLLARS;
 	// pub const BountyDepositPayoutDelay: BlockNumber = 4 * DAYS;
 	// pub const BountyUpdatePeriod: BlockNumber = 90 * DAYS;
@@ -475,7 +468,7 @@ parameter_types! {
 type ApproveOrigin = EnsureRoot<AccountId>;
 
 impl pallet_treasury::Config for Runtime {
-    type ModuleId = TreasuryModuleId;
+    type PalletId = TreasuryPalletId;
     type Currency = Balances;
     type ApproveOrigin = ApproveOrigin;
     type RejectOrigin = EnsureRootOrHalfCouncil;
@@ -487,6 +480,7 @@ impl pallet_treasury::Config for Runtime {
     type Burn = Burn;
     type BurnDestination = (); // TODO: Enable Society
     type SpendFunds = ();
+    type MaxApprovals = MaxApprovals;
     type WeightInfo = weights::pallet_treasury::WeightInfo<Runtime>;
 }
 
@@ -515,14 +509,14 @@ parameter_types! {
 	pub const TermDuration: BlockNumber = 3 * DAYS;
 	pub const DesiredMembers: u32 = 13;
 	pub const DesiredRunnersUp: u32 = 20;
-	pub const ElectionsPhragmenModuleId: LockIdentifier = *b"phrelect";
+	pub const PhragmenElectionPalletId: LockIdentifier = *b"phrelect";
 }
 // Make sure that there are no more than MaxMembers members elected via phragmen.
 const_assert!(DesiredMembers::get() <= CouncilMaxMembers::get());
 
 impl pallet_elections_phragmen::Config for Runtime {
 	type Event = Event;
-	type ModuleId = ElectionsPhragmenModuleId;
+	type PalletId = PhragmenElectionPalletId;
 	type Currency = Balances;
 	type ChangeMembers = Council;
 	// NOTE: this implies that council's genesis members cannot be set directly and must come from
@@ -576,7 +570,7 @@ impl pallet_tips::Config for Runtime {
     type Event = Event;
     type DataDepositPerByte = DataDepositPerByte;
     type MaximumReasonLength = MaximumReasonLength;
-    type Tippers = Elections;
+    type Tippers = PhragmenElection;
     type TipCountdown = TipCountdown;
     type TipFindersFee = TipFindersFee;
     type TipReportDepositBase = TipReportDepositBase;
@@ -615,6 +609,8 @@ impl pallet_membership::Config<pallet_membership::Instance1> for Runtime {
     type PrimeOrigin = EnsureRootOrHalfCouncil;
     type MembershipInitialized = TechnicalCommittee;
     type MembershipChanged = TechnicalCommittee;
+    type MaxMembers = TechnicalMaxMembers;
+	type WeightInfo = ();
 }
 
 parameter_types! {
@@ -705,12 +701,12 @@ impl balances::Config<balances::Instance1> for Runtime {
 }
 
 parameter_types! {
-    pub const ClaimsModuleId: ModuleId = ModuleId(*b"crclaims");
+    pub const ClaimsPalletId: PalletId = PalletId(*b"crclaims");
     pub Prefix: &'static [u8] = b"Pay CRUs to the Crust account:";
 }
 
 impl claims::Config for Runtime {
-    type ModuleId = ClaimsModuleId;
+    type PalletId = ClaimsPalletId;
     type Event = Event;
     type Currency = Balances;
     type Prefix = Prefix;
@@ -762,15 +758,15 @@ impl swork::Config for Runtime {
 
 parameter_types! {
     /// Unit is pico
-    pub const MarketModuleId: ModuleId = ModuleId(*b"crmarket");
+    pub const MarketPalletId: PalletId = PalletId(*b"crmarket");
     pub const FileDuration: BlockNumber = 180 * DAYS;
     pub const LiquidityDuration: BlockNumber = 15 * DAYS;
     pub const FileReplica: u32 = 4;
     pub const InitFileByteFee: Balance = MILLICENTS / 1000; // Need align with FileDuration and FileReplica
     pub const InitFileKeysCountFee: Balance = MILLICENTS / 10;
     pub const StorageReferenceRatio: (u128, u128) = (50, 100); // 50/100 = 50%
-    pub StorageIncreaseRatio: Perbill = Perbill::from_rational_approximation(33u64, 10000);
-    pub StorageDecreaseRatio: Perbill = Perbill::from_rational_approximation(3u64, 1000);
+    pub StorageIncreaseRatio: Perbill = Perbill::from_rational(33u64, 10000);
+    pub StorageDecreaseRatio: Perbill = Perbill::from_rational(3u64, 1000);
     pub const StakingRatio: Perbill = Perbill::from_percent(72);
     pub const StorageRatio: Perbill = Perbill::from_percent(18);
     pub const MaximumFileSize: u64 = 8_589_934_592; // 8G = 8 * 1024 * 1024 * 1024
@@ -779,7 +775,7 @@ parameter_types! {
 
 impl market::Config for Runtime {
     /// The market's module id, used for deriving its sovereign account ID.
-    type ModuleId = MarketModuleId;
+    type PalletId = MarketPalletId;
     type Currency = Balances;
     type SworkerInterface = Swork;
     type BenefitInterface = Benefits;
@@ -802,7 +798,7 @@ impl market::Config for Runtime {
 
 parameter_types! {
     pub const BenefitReportWorkCost: Balance = 3 * DOLLARS;
-    pub BenefitsLimitRatio: Perbill = Perbill::from_rational_approximation(2u64, 1000);
+    pub BenefitsLimitRatio: Perbill = Perbill::from_rational(2u64, 1000);
     pub const BenefitMarketCostRatio: Perbill = Perbill::one();
 }
 
@@ -860,61 +856,61 @@ construct_runtime! {
         UncheckedExtrinsic = UncheckedExtrinsic
     {
         // Basic stuff; balances is uncallable initially.
-        System: frame_system::{Module, Call, Storage, Config, Event<T>},
-        RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Module, Storage},
+        System: frame_system::{Pallet, Call, Storage, Config, Event<T>},
+        RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Pallet, Storage},
 
         // Must be before session
-        Babe: pallet_babe::{Module, Call, Storage, Config, ValidateUnsigned},
+        Babe: pallet_babe::{Pallet, Call, Storage, Config, ValidateUnsigned},
 
-        Timestamp: pallet_timestamp::{Module, Call, Storage, Inherent},
-        Indices: pallet_indices::{Module, Call, Storage, Config<T>, Event<T>},
-        Balances: balances::<Instance1>::{Module, Call, Storage, Config<T>, Event<T>},
-        TransactionPayment: pallet_transaction_payment::{Module, Storage},
+        Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
+        Indices: pallet_indices::{Pallet, Call, Storage, Config<T>, Event<T>},
+        Balances: balances::<Instance1>::{Pallet, Call, Storage, Config<T>, Event<T>},
+        TransactionPayment: pallet_transaction_payment::{Pallet, Storage},
 
         // Consensus support
-        Authorship: pallet_authorship::{Module, Call, Storage},
-        Staking: staking::{Module, Call, Storage, Config<T>, Event<T>},
-        Historical: session_historical::{Module},
-        Session: pallet_session::{Module, Call, Storage, Event, Config<T>},
-        Grandpa: pallet_grandpa::{Module, Call, Storage, Config, Event, ValidateUnsigned},
-        ImOnline: pallet_im_online::{Module, Call, Storage, Event<T>, ValidateUnsigned, Config<T>},
-        AuthorityDiscovery: pallet_authority_discovery::{Module, Call, Config},
-        Offences: pallet_offences::{Module, Call, Storage, Event},
+        Authorship: pallet_authorship::{Pallet, Call, Storage},
+        Staking: staking::{Pallet, Call, Storage, Config<T>, Event<T>},
+        Historical: session_historical::{Pallet},
+        Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>},
+        Grandpa: pallet_grandpa::{Pallet, Call, Storage, Config, Event, ValidateUnsigned},
+        ImOnline: pallet_im_online::{Pallet, Call, Storage, Event<T>, ValidateUnsigned, Config<T>},
+        AuthorityDiscovery: pallet_authority_discovery::{Pallet, Call, Config},
+        Offences: pallet_offences::{Pallet, Call, Storage, Event},
 
         // Governance stuff
-        Treasury: pallet_treasury::{Module, Call, Storage, Config, Event<T>},
-        // Bounties: pallet_bounties::{Module, Call, Storage, Event<T>},
-        Tips: pallet_tips::{Module, Call, Storage, Event<T>},
-        Council: pallet_collective::<Instance1>::{Module, Call, Storage, Origin<T>, Event<T>},
-        TechnicalCommittee: pallet_collective::<Instance2>::{Module, Call, Storage, Origin<T>, Event<T>},
-        TechnicalMembership: pallet_membership::<Instance1>::{Module, Call, Storage, Event<T>},
-        Democracy: pallet_democracy::{Module, Call, Storage, Event<T>},
-        Elections: pallet_elections_phragmen::{Module, Call, Storage, Event<T>},
+        Treasury: pallet_treasury::{Pallet, Call, Storage, Config, Event<T>},
+        // Bounties: pallet_bounties::{Pallet, Call, Storage, Event<T>},
+        Tips: pallet_tips::{Pallet, Call, Storage, Event<T>},
+        Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>},
+        TechnicalCommittee: pallet_collective::<Instance2>::{Pallet, Call, Storage, Origin<T>, Event<T>},
+        TechnicalMembership: pallet_membership::<Instance1>::{Pallet, Call, Storage, Event<T>},
+        Democracy: pallet_democracy::{Pallet, Call, Storage, Event<T>},
+        PhragmenElection: pallet_elections_phragmen::{Pallet, Call, Storage, Event<T>},
 
         // System scheduler
-        Scheduler: pallet_scheduler::{Module, Call, Storage, Event<T>},
+        Scheduler: pallet_scheduler::{Pallet, Call, Storage, Event<T>},
 
         // Utility module
-        Utility: pallet_utility::{Module, Call, Event},
+        Utility: pallet_utility::{Pallet, Call, Event},
 
         // Less simple identity module
-        Identity: pallet_identity::{Module, Call, Storage, Event<T>},
+        Identity: pallet_identity::{Pallet, Call, Storage, Event<T>},
 
         // Crust modules
-        Swork: swork::{Module, Call, Storage, Event<T>, Config<T>},
-        Market: market::{Module, Call, Storage, Event<T>, Config},
-        Claims: claims::{Module, Call, Storage, Event<T>, ValidateUnsigned},
-        Benefits: benefits::{Module, Call, Storage, Event<T>},
-        Locks: locks::{Module, Call, Storage, Config<T>, Event<T>},
+        Swork: swork::{Pallet, Call, Storage, Event<T>, Config<T>},
+        Market: market::{Pallet, Call, Storage, Event<T>, Config},
+        Claims: claims::{Pallet, Call, Storage, Event<T>, ValidateUnsigned},
+        Benefits: benefits::{Pallet, Call, Storage, Event<T>},
+        Locks: locks::{Pallet, Call, Storage, Config<T>, Event<T>},
 
         // Sudo. Last module. Usable initially, but removed once governance enabled.
-        // Sudo: pallet_sudo::{Module, Call, Storage, Config<T>, Event<T>},
+        // Sudo: pallet_sudo::{Pallet, Call, Storage, Config<T>, Event<T>},
         // Multisig module. Late addition.
-        Multisig: pallet_multisig::{Module, Call, Storage, Event<T>},
+        Multisig: pallet_multisig::{Pallet, Call, Storage, Event<T>},
 
         // ChainBridge
-        ChainBridge: bridge::{Module, Call, Storage, Event<T>},
-        BridgeTransfer: bridge_transfer::{Module, Call, Event<T>, Storage},
+        ChainBridge: bridge::{Pallet, Call, Storage, Event<T>},
+        BridgeTransfer: bridge_transfer::{Pallet, Call, Event<T>, Storage},
     }
 }
 
@@ -934,6 +930,31 @@ impl frame_support::traits::OnRuntimeUpgrade for BabeEpochConfigMigrations {
 			}
 		)
 	}
+}
+
+pub struct GrandpaStoragePrefixMigration;
+impl frame_support::traits::OnRuntimeUpgrade for GrandpaStoragePrefixMigration {
+	fn on_runtime_upgrade() -> frame_support::weights::Weight {
+		use frame_support::traits::PalletInfo;
+		let name = <Runtime as frame_system::Config>::PalletInfo::name::<Grandpa>()
+			.expect("grandpa is part of pallets in construct_runtime, so it has a name; qed");
+		pallet_grandpa::migrations::v3_1::migrate::<Runtime, Grandpa, _>(name)
+	}
+
+	// #[cfg(feature = "try-runtime")]
+	// fn pre_upgrade() -> Result<(), &'static str> {
+	// 	use frame_support::traits::PalletInfo;
+	// 	let name = <Runtime as frame_system::Config>::PalletInfo::name::<Grandpa>()
+	// 		.expect("grandpa is part of pallets in construct_runtime, so it has a name; qed");
+	// 	pallet_grandpa::migrations::v3_1::pre_migration::<Runtime, Grandpa, _>(name);
+	// 	Ok(())
+	// }
+
+	// #[cfg(feature = "try-runtime")]
+	// fn post_upgrade() -> Result<(), &'static str> {
+	// 	pallet_grandpa::migrations::v3_1::post_migration::<Grandpa>();
+	// 	Ok(())
+	// }
 }
 
 /// The address format for describing accounts.
@@ -958,16 +979,14 @@ pub type SignedExtra = (
 );
 /// Unchecked extrinsic type as expected by this runtime.
 pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<Address, Call, Signature, SignedExtra>;
-/// Extrinsic type that has already been checked.
-pub type CheckedExtrinsic = generic::CheckedExtrinsic<AccountId, Index, SignedExtra>;
 /// Executive: handles dispatch to the various modules.
 pub type Executive = frame_executive::Executive<
     Runtime,
     Block,
     frame_system::ChainContext<Runtime>,
     Runtime,
-    AllModules,
-    BabeEpochConfigMigrations
+    AllPallets,
+    (BabeEpochConfigMigrations, GrandpaStoragePrefixMigration)
 >;
 
 impl_runtime_apis! {
@@ -1163,8 +1182,8 @@ impl_runtime_apis! {
             // Trying to add benchmarks directly to the Session Pallet caused cyclic dependency issues.
             // To get around that, we separated the Session benchmarks into its own crate, which is why
             // we need these two lines below.
-            use frame_system_benchmarking::Module as SystemBench;
-            use swork_benchmarking::Module as SworkBench;
+            use frame_system_benchmarking::Pallet as SystemBench;
+            use swork_benchmarking::Pallet as SworkBench;
 
             impl frame_system_benchmarking::Config for Runtime {}
             impl swork_benchmarking::Config for Runtime {}

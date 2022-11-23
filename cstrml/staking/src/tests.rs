@@ -1386,7 +1386,7 @@ fn cannot_reserve_staked_balance() {
             // Check that RewardDestination is Staked (default)
             assert_eq!(Staking::payee(&11), RewardDestination::Staked);
             // Check that reward went to the stash account of validator
-            let reward_0 = total_authoring_payout + total_staking_payout * Perbill::from_rational_approximation(1000, 2001);
+            let reward_0 = total_authoring_payout + total_staking_payout * Perbill::from_rational(1000, 2001);
             let stakes_11 = Balances::free_balance(&11);
             let total_stakes = Staking::total_stakes();
             assert_eq!(Balances::free_balance(&11),
@@ -1411,9 +1411,9 @@ fn cannot_reserve_staked_balance() {
             start_era(2, true);
 
             // Check that RewardDestination is Stash
-            let reward_1 = total_authoring_payout*2 + total_staking_payout * Perbill::from_rational_approximation(1000, 2001)
-                + total_staking_payout * Perbill::from_rational_approximation(1000, 2001)
-                + total_staking_payout * Perbill::from_rational_approximation(stakes_11, total_stakes);
+            let reward_1 = total_authoring_payout*2 + total_staking_payout * Perbill::from_rational(1000, 2001)
+                + total_staking_payout * Perbill::from_rational(1000, 2001)
+                + total_staking_payout * Perbill::from_rational(stakes_11, total_stakes);
             assert_eq!(Staking::payee(&11), RewardDestination::Stash);
             // Check that reward went to the stash account
             assert_eq!(
@@ -3024,7 +3024,7 @@ fn reward_from_authorship_event_handler_works() {
     ExtBuilder::default().build().execute_with(|| {
         use pallet_authorship::EventHandler;
 
-        assert_eq!(<pallet_authorship::Module<Test>>::author(), 11);
+        assert_eq!(<pallet_authorship::Pallet<Test>>::author(), 11);
 
         <Module<Test>>::note_author(11);
         <Module<Test>>::note_uncle(21, 1);

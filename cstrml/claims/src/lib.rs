@@ -1,7 +1,7 @@
 // Copyright (C) 2019-2021 Crust Network Technologies Ltd.
 // This file is part of Crust.
 
-//! Module to process claims from Ethereum addresses.
+//! Pallet to process claims from Ethereum addresses.
 #![cfg_attr(not(feature = "std"), no_std)]
 use sp_std::prelude::*;
 use sp_io::{hashing::keccak_256, crypto::secp256k1_ecdsa_recover};
@@ -15,7 +15,7 @@ use codec::{Encode, Decode};
 use serde::{self, Serialize, Deserialize, Serializer, Deserializer};
 
 use sp_runtime::{
-    RuntimeDebug, DispatchResult, ModuleId,
+    RuntimeDebug, DispatchResult, PalletId,
     transaction_validity::{
         TransactionLongevity, TransactionValidity, ValidTransaction, InvalidTransaction, TransactionSource,
     },
@@ -37,7 +37,7 @@ pub type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system:
 
 pub trait Config: frame_system::Config {
     /// The claim's module id, used for deriving its sovereign account ID.
-    type ModuleId: Get<ModuleId>;
+    type PalletId: Get<PalletId>;
 
     /// The overarching event type.
     type Event: From<Event<Self>> + Into<<Self as frame_system::Config>::Event>;
@@ -220,7 +220,7 @@ decl_module! {
         const Prefix: &[u8] = T::Prefix::get();
 
         /// The claim's module id, used for deriving its sovereign account ID.
-        const ModuleId: ModuleId = T::ModuleId::get();
+        const PalletId: PalletId = T::PalletId::get();
 
         /// Change superior
         ///
@@ -372,7 +372,7 @@ impl<T: Config> Module<T> {
     // The claim pot account
     pub fn claim_pot() -> T::AccountId {
         // "modl" ++ "crclaims" ++ "clai" is 16 bytes
-        T::ModuleId::get().into_sub_account("clai")
+        T::PalletId::get().into_sub_account("clai")
     }
 
     // Constructs the message that Ethereum RPC's `personal_sign` and `eth_sign` would sign.

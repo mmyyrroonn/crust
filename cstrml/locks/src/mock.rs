@@ -72,9 +72,9 @@ frame_support::construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
-		System: frame_system::{Module, Call, Config, Storage, Event<T>},
-		Balances: balances::{Module, Call, Storage, Config<T>, Event<T>},
-        CrustLocks: locks::{Module, Call, Storage, Event<T>, Config<T>},
+		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
+		Balances: balances::{Pallet, Call, Storage, Config<T>, Event<T>},
+        CrustLocks: locks::{Pallet, Call, Storage, Event<T>, Config<T>},
 	}
 );
 
