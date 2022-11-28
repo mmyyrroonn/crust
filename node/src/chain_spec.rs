@@ -57,7 +57,7 @@ pub fn get_authority_keys_from_seed(seed: &str) -> (
     GrandpaId,
     BabeId,
     ImOnlineId,
-    AuthorityDiscoveryId,
+    AuthorityDiscoveryId
 ) {
     (
         get_account_id_from_seed::<sr25519::Public>(&format!("{}//stash", seed)),
@@ -102,7 +102,7 @@ pub fn development_config() -> Result<CrustChainSpec, String> {
         DEFAULT_PROTOCOL_ID),
         None,
         Default::default()
-    ))
+    )
 }
 
 /// Crust local testnet config (multi-validator Alice + Bob)
@@ -138,7 +138,7 @@ pub fn local_testnet_config() -> Result<CrustChainSpec, String> {
         ),
         vec![],
         None,
-        DEFAULT_PROTOCOL_ID),
+        DEFAULT_PROTOCOL_ID,
         None,
         Default::default()
     ))
@@ -165,7 +165,7 @@ pub fn rocky_staging_config() -> Result<CrustChainSpec, String> {
         move || rocky_staging_testnet_config_genesis(wasm_binary),
         vec![],
         None,
-        DEFAULT_PROTOCOL_ID),
+        DEFAULT_PROTOCOL_ID,
         None,
         Default::default()
     ))
@@ -182,7 +182,7 @@ pub fn mainnet_staging_config() -> Result<CrustChainSpec, String> {
         move || mainnet_staging_testnet_config_genesis(wasm_binary),
         vec![],
         None,
-        DEFAULT_PROTOCOL_ID),
+        DEFAULT_PROTOCOL_ID,
         None,
         Default::default()
     ))

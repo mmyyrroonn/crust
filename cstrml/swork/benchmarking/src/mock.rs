@@ -4,13 +4,13 @@
 use crate::*;
 
 pub use frame_support::{
-    parameter_types, assert_ok,
+    parameter_types, assert_ok, PalletId,
     weights::{Weight, constants::RocksDbWeight},
     traits::{OnInitialize, OnFinalize, Get, TestRandomness, WithdrawReasons}
 };
 pub use sp_core::{crypto::{AccountId32, Ss58Codec}, H256};
 use sp_runtime::{
-    testing::Header, PalletId, DispatchError,
+    testing::Header, DispatchError,
     traits::{BlakeTwo256, IdentityLookup},
     Perbill,
 };

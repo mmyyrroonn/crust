@@ -13,11 +13,11 @@ use frame_support::{
         ExistenceRequirement::{AllowDeath, KeepAlive},
         WithdrawReasons, Imbalance
     },
-    weights::Weight
+    weights::Weight, PalletId
 };
 use sp_std::{prelude::*, convert::TryInto, collections::btree_set::BTreeSet, collections::btree_map::BTreeMap};
 use frame_system::{self as system, ensure_signed, ensure_root};
-use sp_runtime::{SaturatedConversion, Perbill, PalletId, traits::{Zero, CheckedMul, AccountIdConversion, Saturating}, DispatchError};
+use sp_runtime::{SaturatedConversion, Perbill, traits::{Zero, CheckedMul, AccountIdConversion, Saturating}, DispatchError};
 
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
@@ -51,7 +51,7 @@ const REWARD_PERSON: u32 = 4;
 #[macro_export]
 macro_rules! log {
     ($level:tt, $patter:expr $(, $values:expr)* $(,)?) => {
-        frame_support::debug::$level!(
+        log::$level!(
             target: crate::LOG_TARGET,
             $patter $(, $values)*
         )

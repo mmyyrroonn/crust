@@ -9,7 +9,7 @@ repository = "https://github.com/crustio/crust/"
 
 [dependencies]
 # third party dependencies
-codec = { default-features = false, package = "parity-scale-codec", features = ["derive"], version = "2.0.0" }
+codec = { default-features = false, package = "parity-scale-codec", features = ["derive"], version = "2.1.0" }
 serde = { optional = true, version = "1.0.116" }
 
 # substrate frame dependencies

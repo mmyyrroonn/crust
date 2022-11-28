@@ -60,7 +60,7 @@ const NO_PUNISHMENT: ReportSlot = 0;
 #[macro_export]
 macro_rules! log {
     ($level:tt, $patter:expr $(, $values:expr)* $(,)?) => {
-        frame_support::debug::$level!(
+        log::$level!(
             target: crate::LOG_TARGET,
             $patter $(, $values)*
         )

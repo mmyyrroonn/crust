@@ -146,9 +146,10 @@ impl<T, C, R, OU> OnChargeTransaction<T> for CurrencyAdapter<C, R, OU>
             let refund_imbalance =
                 C::deposit_into_existing(&who, refund_amount).unwrap_or_else(|_| C::PositiveImbalance::zero());
             // merge the imbalance caused by paying the fees and refunding parts of it again.
-            let adjusted_paid = paid
-                .offset(refund_imbalance)
-                .map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Payment))?;
+			let adjusted_paid = paid
+				.offset(refund_imbalance)
+				.same()
+				.map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Payment))?;
             // Call someone else to handle the imbalance (fee and tip separately)
             let imbalances = adjusted_paid.split(tip);
             OU::on_unbalanceds(Some(imbalances.0).into_iter().chain(Some(imbalances.1)));

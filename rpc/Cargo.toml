@@ -10,7 +10,7 @@ repository = "https://github.com/crustio/crust/"
 [dependencies]
 jsonrpc-core = "15.1.0"
 frame-rpc-system = { package = "substrate-frame-rpc-system", git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1"  }
-codec = { default-features = false, package = "parity-scale-codec", version = "2.0.0" }
+codec = { default-features = false, package = "parity-scale-codec", version = "2.1.0" }
 
 # substrate client dependencies
 sc-client-api = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1"}

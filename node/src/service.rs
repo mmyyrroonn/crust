@@ -11,7 +11,6 @@ use sc_service::{error::Error as ServiceError, Configuration, TaskManager};
 use sc_finality_grandpa::{self, AuthoritySetHardFork, FinalityProofProvider as GrandpaFinalityProofProvider};
 use sc_executor::native_executor_instance;
 pub use sc_executor::NativeExecutor;
-use sp_inherents::InherentDataProviders;
 use sc_consensus::LongestChain;
 use telemetry::{Telemetry, TelemetryWorker, TelemetryWorkerHandle};
 
@@ -121,7 +120,17 @@ pub fn new_partial(
         Some(Box::new(justification_import)),
         client.clone(),
         select_chain.clone(),
-        inherent_data_providers.clone(),
+        move |_, ()| async move {
+			let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
+
+			let slot =
+				sp_consensus_babe::inherents::InherentDataProvider::from_timestamp_and_duration(
+					*timestamp,
+					slot_duration,
+				);
+
+			Ok((timestamp, slot))
+		},
         &task_manager.spawn_essential_handle(),
         config.prometheus_registry(),
         sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone()),
@@ -178,7 +187,6 @@ pub fn new_partial(
         select_chain,
         import_queue,
         transaction_pool,
-        inherent_data_providers,
         other: (rpc_extensions_builder, import_setup, rpc_setup, telemetry)
     })
 }
@@ -267,7 +275,16 @@ pub fn new_full(
             block_import: babe_block_import,
             sync_oracle: network.clone(),
             justification_sync_link: network.clone(),
-            inherent_data_providers: inherent_data_providers.clone(),
+            create_inherent_data_providers: move |_, ()| async move {
+				let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
+				let slot =
+					sp_consensus_babe::inherents::InherentDataProvider::from_timestamp_and_duration(
+						*timestamp,
+						slot_duration,
+					);
+
+				Ok((timestamp, slot))
+			},
             force_authoring,
             backoff_authoring_blocks,
             babe_link,
@@ -492,7 +509,17 @@ pub fn new_light(mut config: Configuration) -> Result<TaskManager, ServiceError>
         Some(Box::new(finality_proof_import)),
         client.clone(),
         select_chain.clone(),
-        inherent_data_providers.clone(),
+        move |_, ()| async move {
+			let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
+
+			let slot =
+				sp_consensus_babe::inherents::InherentDataProvider::from_timestamp_and_duration(
+					*timestamp,
+					slot_duration,
+				);
+
+			Ok((timestamp, slot))
+		},
         &task_manager.spawn_essential_handle(),
         config.prometheus_registry(),
         sp_consensus::NeverCanAuthor,

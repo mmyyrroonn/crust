@@ -6,11 +6,11 @@
 use super::*;
 
 use hex_literal::hex;
-use frame_support::{ord_parameter_types, parameter_types, weights::Weight};
+use frame_support::{ord_parameter_types, parameter_types, weights::Weight, PalletId};
 use frame_system::{self as system};
 use sp_core::H256;
 use sp_runtime::{
-	testing::Header, PalletId,
+	testing::Header,
 	traits::{AccountIdConversion, BlakeTwo256, IdentityLookup},
 	Perbill,
 };

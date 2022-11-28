@@ -10,13 +10,13 @@ use frame_support::{
 	ensure,
 	traits::{EnsureOrigin, Get},
 	weights::{GetDispatchInfo, Pays},
-	Parameter,
+	Parameter, PalletId
 };
 
 use frame_system::{self as system, ensure_signed};
 use sp_core::U256;
 use sp_runtime::traits::{AccountIdConversion, Dispatchable};
-use sp_runtime::{RuntimeDebug, PalletId};
+use sp_runtime::RuntimeDebug;
 use sp_std::prelude::*;
 use sp_std::vec;
 

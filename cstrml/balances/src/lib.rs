@@ -161,7 +161,7 @@ use codec::{Codec, Encode, Decode};
 use frame_support::{
 	ensure,
 	traits::{
-		Currency, OnUnbalanced, TryDrop, StoredMap,
+		Currency, OnUnbalanced, TryDrop, StoredMap, SameOrOther,
 		WithdrawReasons, LockIdentifier, LockableCurrency, ExistenceRequirement,
 		Imbalance, SignedImbalance, ReservableCurrency, Get, ExistenceRequirement::KeepAlive,
 		ExistenceRequirement::AllowDeath, BalanceStatus as Status,
@@ -195,7 +195,7 @@ pub mod pallet {
 	pub trait Config<I: 'static = ()>: frame_system::Config {
 		/// The balance of an account.
 		type Balance: Parameter + Member + AtLeast32BitUnsigned + Codec + Default + Copy +
-		MaybeSerializeDeserialize + Debug;
+		MaybeSerializeDeserialize + Debug + MaxEncodedLen;
 
 		/// Handler for the unbalanced reduction when removing a dust account.
 		type DustRemoval: OnUnbalanced<NegativeImbalance<Self, I>>;
@@ -681,7 +681,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 	/// Update the account entry for `who`, given the locks.
 	fn update_locks(who: &T::AccountId, locks: &[BalanceLock<T::Balance>]) {
 		if locks.len() as u32 > T::MaxLocks::get() {
-			frame_support::debug::warn!(
+			log::warn!(
 				"Warning: A user has more currency locks than expected. \
 				A runtime configuration adjustment may be needed."
 			);
@@ -715,7 +715,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 					// No providers for the locks. This is impossible under normal circumstances
 					// since the funds that are under the lock will themselves be stored in the
 					// account and therefore will need a reference.
-					frame_support::debug::warn!(
+					log::warn!(
 						"Warning: Attempt to introduce lock consumer reference, yet no providers. \
 						This is unexpected but should be safe."
 					);
@@ -730,7 +730,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 mod imbalances {
 	use super::{
 		result, Imbalance, Config, Zero, Saturating,
-		TryDrop, RuntimeDebug,
+		TryDrop, RuntimeDebug, SameOrOther
 	};
 	use sp_std::mem;
 
@@ -766,6 +766,18 @@ mod imbalances {
 		}
 	}
 
+	impl<T: Config<I>, I: 'static> Default for PositiveImbalance<T, I> {
+		fn default() -> Self {
+			Self::zero()
+		}
+	}
+
+	impl<T: Config<I>, I: 'static> Default for NegativeImbalance<T, I> {
+		fn default() -> Self {
+			Self::zero()
+		}
+	}
+
 	impl<T: Config<I>, I: 'static> Imbalance<T::Balance> for PositiveImbalance<T, I> {
 		type Opposite = NegativeImbalance<T, I>;
 
@@ -796,14 +808,16 @@ mod imbalances {
 			self.0 = self.0.saturating_add(other.0);
 			mem::forget(other);
 		}
-		fn offset(self, other: Self::Opposite) -> result::Result<Self, Self::Opposite> {
+		fn offset(self, other: Self::Opposite) -> SameOrOther<Self, Self::Opposite> {
 			let (a, b) = (self.0, other.0);
 			mem::forget((self, other));
 
-			if a >= b {
-				Ok(Self(a - b))
+			if a > b {
+				SameOrOther::Same(Self(a - b))
+			} else if b > a {
+				SameOrOther::Other(NegativeImbalance::new(b - a))
 			} else {
-				Err(NegativeImbalance::new(b - a))
+				SameOrOther::None
 			}
 		}
 		fn peek(&self) -> T::Balance {
@@ -847,14 +861,16 @@ mod imbalances {
 			self.0 = self.0.saturating_add(other.0);
 			mem::forget(other);
 		}
-		fn offset(self, other: Self::Opposite) -> result::Result<Self, Self::Opposite> {
+		fn offset(self, other: Self::Opposite) -> SameOrOther<Self, Self::Opposite> {
 			let (a, b) = (self.0, other.0);
 			mem::forget((self, other));
 
-			if a >= b {
-				Ok(Self(a - b))
+			if a > b {
+				SameOrOther::Same(Self(a - b))
+			} else if b > a {
+				SameOrOther::Other(PositiveImbalance::new(b - a))
 			} else {
-				Err(PositiveImbalance::new(b - a))
+				SameOrOther::None
 			}
 		}
 		fn peek(&self) -> T::Balance {

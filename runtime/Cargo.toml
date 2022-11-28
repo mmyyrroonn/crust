@@ -13,7 +13,7 @@ substrate-wasm-builder = { git = "https://github.com/crustio/substrate", rev = "
 
 [dependencies]
 # third party dependencies
-codec = { default-features = false, features = ["derive"], package = "parity-scale-codec", version = "2.0.0" }
+codec = { default-features = false, features = ["derive"], package = "parity-scale-codec", version = "2.1.0" }
 serde = { features = ["derive"], optional = true, version = "1.0.117" }
 static_assertions = "1.1.0"
 smallvec = "1.4.1"

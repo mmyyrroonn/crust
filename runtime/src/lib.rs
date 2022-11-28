@@ -23,7 +23,7 @@ use sp_runtime::{Perquintill, FixedPointNumber, traits::{
 }};
 use sp_runtime::{
     create_runtime_str, generic, impl_opaque_keys,
-    Permill, Percent, ApplyExtrinsicResult, Perbill, KeyTypeId, PalletId,
+    Permill, Percent, ApplyExtrinsicResult, Perbill, KeyTypeId,
     transaction_validity::{TransactionValidity, TransactionSource, TransactionPriority}
 };
 use sp_std::prelude::*;
@@ -41,7 +41,7 @@ use sp_version::RuntimeVersion;
 pub use authority_discovery_primitives::AuthorityId as AuthorityDiscoveryId;
 pub use balances::Call as BalancesCall;
 pub use frame_support::{
-    construct_runtime, parameter_types,
+    construct_runtime, parameter_types, PalletId,
     traits::{Currency, KeyOwnerProofSystem, Randomness, OnUnbalanced,
              Imbalance, LockIdentifier, U128CurrencyToVote, StorageMapShim},
     weights::{
@@ -1028,10 +1028,6 @@ impl_runtime_apis! {
             data: sp_inherents::InherentData,
         ) -> sp_inherents::CheckInherentsResult {
             data.check_extrinsics(&block)
-        }
-
-        fn random_seed() -> <Block as BlockT>::Hash {
-            pallet_babe::RandomnessFromOneEpochAgo::<Runtime>::random_seed().0
         }
     }
 

@@ -16,7 +16,7 @@ use sp_std::{vec, prelude::*, collections::btree_set::BTreeSet, iter::FromIterat
 const SEED: u32 = 0;
 const EXPIRE_BLOCK_NUMBER: u32 = 2000;
 
-pub struct Module<T: Config>(swork::Module<T>);
+pub struct Pallet<T: Config>(swork::Module<T>);
 pub trait Config: market::Config + swork::Config {}
 pub type Balance = u64;
 
@@ -195,7 +195,7 @@ benchmarks! {
 
         // Set block number, system hash and pk in swork
         swork::Module::<T>::insert_pk_info(wr.curr_pk.clone(), code.clone());
-        system::Module::<T>::set_block_number(303u32.into());
+        system::Pallet::<T>::set_block_number(303u32.into());
         let fake_bh:T::Hash = T::Hash::decode(&mut &wr.block_hash[..]).unwrap_or_default();
         let target_block_number:T::BlockNumber = 300u32.into();
         <system::BlockHash<T>>::insert(target_block_number, fake_bh);
@@ -231,7 +231,7 @@ benchmarks! {
 
         // Set block number, system hash and pk in swork
         swork::Module::<T>::insert_pk_info(wr.curr_pk.clone(), code.clone());
-        system::Module::<T>::set_block_number(303u32.into());
+        system::Pallet::<T>::set_block_number(303u32.into());
         let fake_bh:T::Hash = T::Hash::decode(&mut &wr.block_hash[..]).unwrap_or_default();
         let target_block_number:T::BlockNumber = 300u32.into();
         <system::BlockHash<T>>::insert(target_block_number, fake_bh);
@@ -269,7 +269,7 @@ benchmarks! {
 
         // Set block number, system hash and pk in swork at 300
         swork::Module::<T>::insert_pk_info(wr.curr_pk.clone(), code.clone());
-        system::Module::<T>::set_block_number(303u32.into());
+        system::Pallet::<T>::set_block_number(303u32.into());
         let fake_bh:T::Hash = T::Hash::decode(&mut &wr.block_hash[..]).unwrap_or_default();
         let target_block_number:T::BlockNumber = 300u32.into();
         <system::BlockHash<T>>::insert(target_block_number, fake_bh);
@@ -295,7 +295,7 @@ benchmarks! {
 
         let wr = legal_work_report_with_deleted_files();
         // Set block number, system hash and pk in swork at 600
-        system::Module::<T>::set_block_number(603u32.into());
+        system::Pallet::<T>::set_block_number(603u32.into());
         let fake_bh:T::Hash = T::Hash::decode(&mut &wr.block_hash[..]).unwrap_or_default();
         let target_block_number:T::BlockNumber = 600u32.into();
         <system::BlockHash<T>>::insert(target_block_number, fake_bh);
@@ -344,7 +344,7 @@ benchmarks! {
         swork::Module::<T>::insert_pk_info(wr.curr_pk.clone(), code.clone());
 
         // Set block number, system hash and pk in swork at 600
-        system::Module::<T>::set_block_number(603u32.into());
+        system::Pallet::<T>::set_block_number(603u32.into());
         let fake_bh:T::Hash = T::Hash::decode(&mut &wr.block_hash[..]).unwrap_or_default();
         let target_block_number:T::BlockNumber = 600u32.into();
         <system::BlockHash<T>>::insert(target_block_number, fake_bh);

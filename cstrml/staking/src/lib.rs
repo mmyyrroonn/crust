@@ -18,7 +18,7 @@ mod tests;
 use codec::{Decode, Encode, HasCompact};
 use total_stake_limit_ratio::total_stake_limit_ratio;
 use frame_support::{
-    decl_module, decl_event, decl_storage, ensure, decl_error,
+    decl_module, decl_event, decl_storage, ensure, decl_error, PalletId,
     storage::IterableStorageMap,
     weights::{Weight, constants::{WEIGHT_PER_MICROS, WEIGHT_PER_NANOS}},
     traits::{
@@ -29,7 +29,7 @@ use frame_support::{
 };
 use pallet_session::historical;
 use sp_runtime::{
-    Perbill, Permill, RuntimeDebug, SaturatedConversion, PalletId,
+    Perbill, Permill, RuntimeDebug, SaturatedConversion,
     traits::{
         Convert, Zero, One, StaticLookup, Saturating, AtLeast32Bit,
         CheckedAdd, CheckedSub, AtLeast32BitUnsigned
@@ -66,7 +66,7 @@ pub(crate) const LOG_TARGET: &'static str = "staking";
 #[macro_export]
 macro_rules! log {
     ($level:tt, $patter:expr $(, $values:expr)* $(,)?) => {
-        frame_support::debug::$level!(
+        log::$level!(
             target: crate::LOG_TARGET,
             $patter $(, $values)*
         )
@@ -440,7 +440,7 @@ pub trait Config: frame_system::Config {
     type Reward: OnUnbalanced<PositiveImbalanceOf<Self>>;
 
     /// Something that provides randomness in the runtime.
-    type Randomness: Randomness<Self::Hash>;
+    type Randomness: Randomness<Self::Hash, Self::BlockNumber>;
 
     /// Number of sessions per era.
     type SessionsPerEra: Get<SessionIndex>;
@@ -2567,11 +2567,7 @@ for Module<T> where
         offenders: &[OffenceDetails<T::AccountId, pallet_session::historical::IdentificationTuple<T>>],
         slash_fraction: &[Perbill],
         slash_session: SessionIndex,
-    ) -> Result<Weight, ()> {
-        if !Self::can_report() {
-            return Err(())
-        }
-
+    ) -> Weight {
         let reward_proportion = SlashRewardFraction::get();
         let mut consumed_weight: Weight = 0;
         let mut add_db_reads_writes = |reads, writes| {
@@ -2583,7 +2579,7 @@ for Module<T> where
             add_db_reads_writes(1, 0);
             if active_era.is_none() {
                 // this offence need not be re-submitted.
-                return Ok(consumed_weight)
+                return consumed_weight;
             }
             active_era.expect("value checked not to be `None`; qed").index
         };
@@ -2608,7 +2604,7 @@ for Module<T> where
             match eras.iter().rev().filter(|&&(_, ref sesh)| sesh <= &slash_session).next() {
                 Some(&(ref slash_era, _)) => *slash_era,
                 // before bonding period. defensive - should be filtered out.
-                None => return Ok(consumed_weight),
+                None => return consumed_weight,
             }
         };
 
@@ -2676,11 +2672,7 @@ for Module<T> where
             }
         }
 
-        Ok(consumed_weight)
-    }
-
-    fn can_report() -> bool {
-        true
+        consumed_weight
     }
 }
 

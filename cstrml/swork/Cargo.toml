@@ -9,10 +9,11 @@ repository = "https://github.com/crustio/crust/"
 
 [dependencies]
 # third party dependencies
-codec = { default-features = false, package = "parity-scale-codec", version = "2.0.0" }
+codec = { default-features = false, package = "parity-scale-codec", version = "2.1.0" }
 serde = { optional = true, version = "1.0.116" }
 base64 = { default-features = false, features = ["alloc"], version = "0.12.2" }
 p256 = { default-features = false, features = ["ecdsa"], version = "0.5.1" }
+log = { version = "0.4.14", default-features = false }
 
 # substrate frame dependencies
 frame-support = { default-features = false, git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
