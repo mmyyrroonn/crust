@@ -55,8 +55,6 @@ pub fn new_partial(
     >,
     ServiceError> {
 
-    let inherent_data_providers = InherentDataProviders::new();
-
     let telemetry = config.telemetry_endpoints.clone()
     .filter(|x| !x.is_empty())
     .map(move |endpoints| -> Result<_, telemetry::Error> {
@@ -90,11 +88,11 @@ pub fn new_partial(
     let select_chain = sc_consensus::LongestChain::new(backend.clone());
 
     let transaction_pool = sc_transaction_pool::BasicPool::new_full(
-    config.transaction_pool.clone(),
-    config.role.is_authority().into(),
-    config.prometheus_registry(),
-    task_manager.spawn_essential_handle(),
-    client.clone(),
+        config.transaction_pool.clone(),
+        config.role.is_authority().into(),
+        config.prometheus_registry(),
+        task_manager.spawn_handle(),
+        client.clone(),
     );
 
     let (grandpa_block_import, grandpa_link) =
@@ -113,7 +111,7 @@ pub fn new_partial(
         grandpa_block_import,
         client.clone(),
     )?;
-
+    let slot_duration = babe_link.config().slot_duration();
     let import_queue = sc_consensus_babe::import_queue(
         babe_link.clone(),
         babe_block_import.clone(),
@@ -205,7 +203,6 @@ pub fn new_full(
         select_chain,
         import_queue,
         transaction_pool,
-        inherent_data_providers,
         other: (rpc_extensions_builder, import_setup, rpc_setup, mut telemetry)
     } = new_partial(&config, telemetry_worker_handle)?;
 
@@ -234,11 +231,11 @@ pub fn new_full(
 
     if config.offchain_worker.enabled {
         sc_service::build_offchain_workers(
-            &config, backend.clone(), task_manager.spawn_handle(), client.clone(), network.clone(),
+            &config, task_manager.spawn_handle(), client.clone(), network.clone(),
         );
     }
 
-    let (_rpc_handlers) = sc_service::spawn_tasks(sc_service::SpawnTasksParams {
+    let _rpc_handlers = sc_service::spawn_tasks(sc_service::SpawnTasksParams {
         config,
         backend: backend.clone(),
         client: client.clone(),
@@ -261,12 +258,14 @@ pub fn new_full(
                 task_manager.spawn_handle(),
                 client.clone(),
                 transaction_pool,
-                prometheus_registry.as_ref()
+                prometheus_registry.as_ref(),
+                telemetry.as_ref().map(|x| x.handle())
             );
 
         let can_author_with =
             sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
 
+        let slot_duration = babe_link.config().slot_duration();
         let babe_config = sc_consensus_babe::BabeParams {
             keystore: keystore_container.sync_keystore(),
             client: client.clone(),
@@ -274,7 +273,6 @@ pub fn new_full(
             env: proposer,
             block_import: babe_block_import,
             sync_oracle: network.clone(),
-            justification_sync_link: network.clone(),
             create_inherent_data_providers: move |_, ()| async move {
 				let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 				let slot =
@@ -316,8 +314,8 @@ pub fn new_full(
                 Event::Dht(e) => Some(e),
                 _ => None,
             }});
-        let (worker, service) = sc_authority_discovery::new_worker_and_service_with_config(
-            sc_authority_discovery::WorkerConfig {
+        let (worker, service) = authority_discovery::new_worker_and_service_with_config(
+            authority_discovery::WorkerConfig {
                 publish_non_global_ips: auth_disc_publish_non_global_ips,
                 ..Default::default()
             },
@@ -450,8 +448,19 @@ pub(crate) fn grandpa_mainnet_hard_forks() -> Vec<AuthoritySetHardFork<Block>> {
 
 /// Builds a new service for a light client.
 pub fn new_light(mut config: Configuration) -> Result<TaskManager, ServiceError> {
+	let telemetry = config.telemetry_endpoints.clone()
+		.filter(|x| !x.is_empty())
+		.map(|endpoints| -> Result<_, telemetry::Error> {
+			let worker = TelemetryWorker::new(16)?;
+			let telemetry = worker.handle().new_telemetry(endpoints);
+			Ok((worker, telemetry))
+		})
+		.transpose()?;
     let (client, backend, keystore, mut task_manager, on_demand) =
-        sc_service::new_light_parts::<Block, RuntimeApi, CrustExecutor>(&config)?;
+        sc_service::new_light_parts::<Block, RuntimeApi, CrustExecutor>(
+            &config,
+            telemetry.as_ref().map(|(_, telemetry)| telemetry.handle()),
+        )?;
 
     let telemetry = config.telemetry_endpoints.clone()
         .filter(|x| !x.is_empty())
@@ -463,7 +472,7 @@ pub fn new_light(mut config: Configuration) -> Result<TaskManager, ServiceError>
         .transpose()?;
 
     let (client, backend, keystore_container, mut task_manager, on_demand) =
-        service::new_light_parts::<Block, Runtime, Dispatch>(
+        sc_service::new_light_parts::<Block, RuntimeApi, CrustExecutor>(
             &config,
             telemetry.as_ref().map(|(_, telemetry)| telemetry.handle()),
         )?;
@@ -474,14 +483,14 @@ pub fn new_light(mut config: Configuration) -> Result<TaskManager, ServiceError>
             telemetry
         });
 
-    config.network.extra_sets.push(grandpa::grandpa_peers_set_config());
+    config.network.extra_sets.push(sc_finality_grandpa::grandpa_peers_set_config());
 
     let select_chain = LongestChain::new(backend.clone());
 
     let transaction_pool = Arc::new(sc_transaction_pool::BasicPool::new_light(
         config.transaction_pool.clone(),
         config.prometheus_registry(),
-        task_manager.spawn_essential_handle(),
+        task_manager.spawn_handle(),
         client.clone(),
         on_demand.clone(),
     ));
@@ -500,9 +509,9 @@ pub fn new_light(mut config: Configuration) -> Result<TaskManager, ServiceError>
         grandpa_block_import,
         client.clone(),
     )?;
-    let inherent_data_providers = InherentDataProviders::new();
 
     // FIXME: pruning task isn't started since light client doesn't do `AuthoritySetup`.
+    let slot_duration = babe_link.config().slot_duration();
     let import_queue = sc_consensus_babe::import_queue(
         babe_link,
         babe_block_import,
@@ -553,13 +562,13 @@ pub fn new_light(mut config: Configuration) -> Result<TaskManager, ServiceError>
 
 		task_manager.spawn_handle().spawn_blocking(
 			"grandpa-observer",
-			grandpa::run_grandpa_observer(config, grandpa_link, network.clone())?,
+			sc_finality_grandpa::run_grandpa_observer(config, grandpa_link, network.clone())?,
 		);
 	}
 
     if config.offchain_worker.enabled {
         sc_service::build_offchain_workers(
-            &config, backend.clone(), task_manager.spawn_handle(), client.clone(), network.clone(),
+            &config, task_manager.spawn_handle(), client.clone(), network.clone(),
         );
     }
 

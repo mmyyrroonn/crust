@@ -31,6 +31,8 @@ sc-executor = { features = ["wasmtime"], git = "https://github.com/crustio/subst
 sc-network = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
 sc-service = { features = ["wasmtime"], git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
 sc-transaction-pool = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1"}
+telemetry = { package = "sc-telemetry", git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1"}
+sp-timestamp = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1" }
 
 # substrate primitives
 sp-transaction-pool = { git = "https://github.com/crustio/substrate", rev = "d63819e0fdc8a6b17cd02b939533911eafdd48b1"}

@@ -56,7 +56,7 @@ pub fn run() -> sc_cli::Result<()> {
             let runner = cli.create_runner(cmd)?;
             runner.async_run(|config| {
                 let PartialComponents { client, task_manager, import_queue, .. }
-                    = new_partial(&config)?;
+                    = new_partial(&config, None)?;
                 Ok((cmd.run(client, import_queue), task_manager))
             })
         },
@@ -64,7 +64,7 @@ pub fn run() -> sc_cli::Result<()> {
             let runner = cli.create_runner(cmd)?;
             runner.async_run(|config| {
                 let PartialComponents { client, task_manager, ..}
-                    = new_partial(&config)?;
+                    = new_partial(&config, None)?;
                 Ok((cmd.run(client, config.database), task_manager))
             })
         },
@@ -72,7 +72,7 @@ pub fn run() -> sc_cli::Result<()> {
             let runner = cli.create_runner(cmd)?;
             runner.async_run(|config| {
                 let PartialComponents { client, task_manager, ..}
-                    = new_partial(&config)?;
+                    = new_partial(&config, None)?;
                 Ok((cmd.run(client, config.chain_spec), task_manager))
             })
         },
@@ -80,7 +80,7 @@ pub fn run() -> sc_cli::Result<()> {
             let runner = cli.create_runner(cmd)?;
             runner.async_run(|config| {
                 let PartialComponents { client, task_manager, import_queue, ..}
-                    = new_partial(&config)?;
+                    = new_partial(&config, None)?;
                 Ok((cmd.run(client, import_queue), task_manager))
             })
         },
@@ -92,7 +92,7 @@ pub fn run() -> sc_cli::Result<()> {
             let runner = cli.create_runner(cmd)?;
             runner.async_run(|config| {
                 let PartialComponents { client, task_manager, backend, ..}
-                    = new_partial(&config)?;
+                    = new_partial(&config, None)?;
                 Ok((cmd.run(client, backend), task_manager))
             })
         },

@@ -99,10 +99,10 @@ pub fn development_config() -> Result<CrustChainSpec, String> {
         ),
         vec![],
         None,
-        DEFAULT_PROTOCOL_ID),
+        Some(DEFAULT_PROTOCOL_ID),
         None,
         Default::default()
-    )
+    ))
 }
 
 /// Crust local testnet config (multi-validator Alice + Bob)
@@ -138,7 +138,7 @@ pub fn local_testnet_config() -> Result<CrustChainSpec, String> {
         ),
         vec![],
         None,
-        DEFAULT_PROTOCOL_ID,
+        Some(DEFAULT_PROTOCOL_ID),
         None,
         Default::default()
     ))
@@ -165,7 +165,7 @@ pub fn rocky_staging_config() -> Result<CrustChainSpec, String> {
         move || rocky_staging_testnet_config_genesis(wasm_binary),
         vec![],
         None,
-        DEFAULT_PROTOCOL_ID,
+        Some(DEFAULT_PROTOCOL_ID),
         None,
         Default::default()
     ))
@@ -182,7 +182,7 @@ pub fn mainnet_staging_config() -> Result<CrustChainSpec, String> {
         move || mainnet_staging_testnet_config_genesis(wasm_binary),
         vec![],
         None,
-        DEFAULT_PROTOCOL_ID,
+        Some(DEFAULT_PROTOCOL_ID),
         None,
         Default::default()
     ))
