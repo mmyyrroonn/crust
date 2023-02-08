@@ -136,7 +136,7 @@ fn legal_work_report_with_deleted_files() -> ReportWorksInfo {
 fn add_market_files<T: Config>(files: Vec<(MerkleRoot, u64, u64)>, user: T::AccountId, pub_key: Vec<u8>) {
     for (file, file_size, _) in files.clone().iter() {
         let mut replicas = BTreeMap::<T::AccountId, Replica<T::AccountId>>::new();
-        for index in 0..200 {
+        for index in 0..10 {
             let who: T::AccountId = account("noder", index, SEED);
             let new_replica = Replica {
                 who: who.clone(),

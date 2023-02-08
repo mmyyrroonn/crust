@@ -23,6 +23,7 @@ use frame_system::{self as system, ensure_root, ensure_signed};
 
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
+use std::time::Instant;
 
 // Crust primitives and runtime modules
 use primitives::{
@@ -570,24 +571,35 @@ decl_module! {
             let reporter = ensure_signed(origin)?;
             let mut prev_pk = curr_pk.clone();
 
+            let before = Instant::now();
             // 1. Basic check
             ensure!(reported_srd_size < SRD_LIMIT && reported_files_size < FILES_LIMIT && added_files.len() <= FILES_COUNT_LIMIT && deleted_files.len() <= FILES_COUNT_LIMIT, Error::<T>::IllegalWorkReport);
-
+            println!("Basic check {:.2?}", before.elapsed());
             // 2. Ensure reporter is registered
+
+            let before = Instant::now();
             ensure!(PubKeys::contains_key(&curr_pk), Error::<T>::IllegalReporter);
+            println!("Pubkey check {:.2?}", before.elapsed());
 
             // 3. Ensure who cannot be group owner
+            let before = Instant::now();
             ensure!(!<Groups<T>>::contains_key(&reporter), Error::<T>::GroupOwnerForbidden);
+            println!("Groups check {:.2?}", before.elapsed());
             
             // 4. Ensure reporter's code is legal
+            let before = Instant::now();
             ensure!(Self::reporter_code_check(&curr_pk, slot), Error::<T>::OutdatedReporter);
+            println!("reporter_code_check check {:.2?}", before.elapsed());
 
             // 5. Decide which scenario
+            let before = Instant::now();
             let maybe_anchor = Self::pub_keys(&curr_pk).anchor;
             let is_ab_upgrade = maybe_anchor.is_none() && !ab_upgrade_pk.is_empty();
             let is_first_report = maybe_anchor.is_none() && ab_upgrade_pk.is_empty();
+            println!("scenario check {:.2?}", before.elapsed());
 
             // 6. Unique Check for normal report work for curr pk
+            let before = Instant::now();
             if let Some(anchor) = maybe_anchor {
                 // Normally report works.
                 // 6.1 Ensure Identity's anchor be same with current pk's anchor
@@ -604,11 +616,15 @@ decl_module! {
                     return Ok(Some(0 as Weight).into())
                 }
             }
+            println!("Unique check {:.2?}", before.elapsed());
 
             // 7. Timing check
+            let before = Instant::now();
             ensure!(Self::work_report_timing_check(slot, &slot_hash).is_ok(), Error::<T>::InvalidReportTime);
+            println!("work_report_timing_check check {:.2?}", before.elapsed());
 
             // 8. Ensure sig is legal
+            let before = Instant::now();
             ensure!(
                 Self::work_report_sig_check(
                     &curr_pk,
@@ -625,8 +641,10 @@ decl_module! {
                 ),
                 Error::<T>::IllegalWorkReportSig
             );
+            println!("work_report_sig_check check {:.2?}", before.elapsed());
 
             // 9. Files storage status transition check
+            let before = Instant::now();
             if is_ab_upgrade {
                 // 9.1 Previous pk should already reported works
                 ensure!(PubKeys::contains_key(&ab_upgrade_pk), Error::<T>::ABUpgradeFailed);
@@ -644,6 +662,7 @@ decl_module! {
 
                 // 9.3 Set the real previous public key(contains work report);
                 prev_pk = ab_upgrade_pk.clone();
+                println!("is_ab_upgrade check cost {:.2?}", before.elapsed());
             } else {
                 ensure!(
                     Self::files_transition_check(
@@ -655,9 +674,11 @@ decl_module! {
                     ),
                     Error::<T>::IllegalFilesTransition
                 );
+                println!("files_transition_check check {:.2?}", before.elapsed());
             }
 
             // 10. Finish register
+            let before = Instant::now();
             if is_ab_upgrade {
                 // 10.1 Transfer A's status to B and delete old A's storage status
                 let prev_pk_info = Self::pub_keys(&prev_pk);
@@ -689,6 +710,7 @@ decl_module! {
                 pk_info.anchor = Some(curr_pk.clone());
                 PubKeys::insert(&curr_pk, pk_info);
             }
+            println!("Finish register {:.2?}", before.elapsed());
 
             // 11. 🏋🏻 ‍️Merge work report and update corresponding storages, contains:
             // a. Upsert work report
@@ -696,6 +718,7 @@ decl_module! {
             // c. Update sOrders according to `added_files` and `deleted_files`
             // d. Update `report_in_slot`
             // e. Update total spaces(spower and reserved)
+            let before = Instant::now();
             let anchor = Self::pub_keys(&curr_pk).anchor.unwrap();
             Self::maybe_upsert_work_report(
                 &reporter,
@@ -708,16 +731,19 @@ decl_module! {
                 &reported_files_root,
                 slot,
             );
+            println!("maybe_upsert_work_report cost {:.2?}", before.elapsed());
 
             // 12. Emit work report event
             Self::deposit_event(RawEvent::WorksReportSuccess(reporter.clone(), curr_pk.clone()));
 
             // 13. Try to free count limitation
+            let before = Instant::now();
             let id = Self::identities(&reporter).unwrap_or_default();
             let owner = if let Some(group) = id.group { group } else { reporter };
             if T::BenefitInterface::maybe_free_count(&owner) {
                return Ok(Pays::No.into());
             }
+            println!("Free count limitation {:.2?}", before.elapsed());
 
             Ok(Pays::Yes.into())
         }
@@ -1076,8 +1102,10 @@ impl<T: Config> Module<T> {
         let mut old_free: u64 = 0;
         let mut old_reported_files_size: u64 = 0;
 
+        let before = Instant::now();
         // 1. Mark who has reported in this (report)slot
         ReportedInSlot::insert(&anchor, report_slot, true);
+        println!("ReportedInSlot insert cost {:.2?}", before.elapsed());
 
         // 2. Update sOrder and get changed size
         // loop added. if not exist, calculate spower.
@@ -1085,16 +1113,21 @@ impl<T: Config> Module<T> {
         let (added_files_size, added_files_count)= Self::update_files(reporter, added_files, &anchor, true);
         let (deleted_files_size, _) = Self::update_files(reporter, deleted_files, &anchor, false);
 
+        let before = Instant::now();
         AddedFilesCount::mutate(|count| {*count = count.saturating_add(added_files_count)});
+        println!("AddedFilesCount cost {:.2?}", before.elapsed());
 
         // 3. If contains work report
+        let before = Instant::now();
         if let Some(old_wr) = Self::work_reports(&anchor) {
             old_spower = old_wr.spower;
             old_free = old_wr.free;
             old_reported_files_size = old_wr.reported_files_size;
         }
+        println!("get old wr cost {:.2?}", before.elapsed());
 
         // 4. Construct work report
+        let before = Instant::now();
         let spower = old_spower.saturating_add(added_files_size).saturating_sub(deleted_files_size);
         let wr = WorkReport {
             report_slot,
@@ -1108,12 +1141,16 @@ impl<T: Config> Module<T> {
         // 5. Upsert work report
         WorkReports::insert(anchor, wr);
 
+        println!("WorkReports insert cost {:.2?}", before.elapsed());
+
         // 6. Update workload
+        let before = Instant::now();
         let total_free = Self::free().saturating_sub(old_free as u128).saturating_add(reported_srd_size as u128);
         let total_reported_files_size = Self::reported_files_size().saturating_sub(old_reported_files_size as u128).saturating_add(reported_files_size as u128);
 
         Free::put(total_free);
         ReportedFilesSize::put(total_reported_files_size);
+        println!("ReportedFilesSize and Free insert cost {:.2?}", before.elapsed());
     }
 
     /// Update sOrder information based on changed files, return the changed_file_size and changed_file_count
@@ -1128,12 +1165,14 @@ impl<T: Config> Module<T> {
         // 1. Loop changed files
         if is_added {
             for (cid, size, valid_at) in changed_files {
+                let before = Instant::now();
                 let mut owner = reporter.clone();
                 if let Some(identity) = Self::identities(reporter) {
                     if let Some(group_owner) = identity.group {
                         owner = group_owner;
                     }
                 };
+                println!("Add file get owner cost {:.2?}", before.elapsed());
                 let (added_spower, is_valid_cid) = T::MarketInterface::upsert_replica(reporter, owner, cid, *size, anchor, TryInto::<u32>::try_into(*valid_at).ok().unwrap());
                 changed_spower = changed_spower.saturating_add(added_spower);
                 if is_valid_cid {
@@ -1143,12 +1182,14 @@ impl<T: Config> Module<T> {
         } else {
             for (cid, _, _) in changed_files {
                 // 2. If mapping to storage orders
+                let before = Instant::now();
                 let mut owner = reporter.clone();
                 if let Some(identity) = Self::identities(reporter) {
                     if let Some(group_owner) = identity.group {
                         owner = group_owner;
                     }
                 };
+                println!("Delete file get owner cost {:.2?}", before.elapsed());
                 let (deleted_spower, is_valid_cid) = T::MarketInterface::delete_replica(reporter, owner, cid, anchor);
                 changed_spower = changed_spower.saturating_add(deleted_spower);
                 if is_valid_cid {

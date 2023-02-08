@@ -21,6 +21,7 @@ use sp_runtime::{SaturatedConversion, Perbill, ModuleId, traits::{Zero, CheckedM
 
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
+use std::time::Instant;
 
 pub mod weight;
 
@@ -131,12 +132,17 @@ impl<T: Config> MarketInterface<<T as system::Config>::AccountId, BalanceOf<T>> 
         // if the file exist, is_counted == true, will change it later.
         let mut spower: u64 = 0;
         let mut is_valid_cid: bool = false;
+        let before = Instant::now();
         if let Some(mut file_info) = <FilesV2<T>>::get(cid) {
+            println!("<FilesV2<T>>::get(cid) cost {:.2?}", before.elapsed());
             is_valid_cid = true;
             // 1. Check if the length of the groups exceed MAX_REPLICAS or not
             if file_info.replicas.len() < MAX_REPLICAS {
+                let before = Instant::now();
                 // 2. Check if the file is stored by other members
                 if !file_info.replicas.contains_key(&owner) {
+                    println!("file_info.replicas.contains_key cost {:.2?}", before.elapsed());
+                    let before = Instant::now();
                     let new_replica = Replica {
                         who: who.clone(),
                         valid_at,
@@ -149,11 +155,18 @@ impl<T: Config> MarketInterface<<T as system::Config>::AccountId, BalanceOf<T>> 
                     file_info.reported_replica_count += 1;
                     // Always return the file size for this [who] reported first time
                     spower = file_info.file_size;
+                    println!("prepare new file cost {:.2?}", before.elapsed());
 
                     if file_info.remaining_paid_count > 0 {
+                        let before = Instant::now();
                         let reward_amount = Self::calculate_reward_amount(file_info.remaining_paid_count, &file_info.amount);
+                        println!("calculate_reward_amount cost {:.2?}", before.elapsed());
+                        let before = Instant::now();
                         if let Some(new_reward) = Self::has_enough_collateral(&owner, &reward_amount) {
+                            println!("has_enough_collateral cost {:.2?}", before.elapsed());
+                            let before = Instant::now();
                             T::BenefitInterface::update_reward(&owner, new_reward);
+                            println!("update_reward cost {:.2?}", before.elapsed());
                             file_info.amount = file_info.amount.saturating_sub(reward_amount);
                             file_info.remaining_paid_count = file_info.remaining_paid_count.saturating_sub(1);
                         }
@@ -162,14 +175,18 @@ impl<T: Config> MarketInterface<<T as system::Config>::AccountId, BalanceOf<T>> 
             }
 
             // 3. The first join the replicas and file become live(expired_at > calculated_at)
+            let before = Instant::now();
             if file_info.expired_at == 0 {
                 let curr_bn = Self::get_current_block_number();
                 file_info.calculated_at = curr_bn;
                 file_info.expired_at = curr_bn + T::FileDuration::get();
             }
+            println!("update expired_at cost {:.2?}", before.elapsed());
 
             // 4. Update files
+            let before = Instant::now();
             <FilesV2<T>>::insert(cid, file_info);
+            println!("FilesV2 insert cost {:.2?}", before.elapsed());
         }
         (spower, is_valid_cid)
     }
@@ -184,7 +201,10 @@ impl<T: Config> MarketInterface<<T as system::Config>::AccountId, BalanceOf<T>> 
         let mut spower: u64 = 0;
         let mut is_valid_cid: bool = false;
         // 1. Delete replica from file_info
+        let before = Instant::now();
         if let Some(mut file_info) = <FilesV2<T>>::get(cid) {
+            println!("<FilesV2<T>>::get(cid) cost {:.2?}", before.elapsed());
+            let before = Instant::now();
             is_valid_cid = true;
             let mut to_decrease_count = 0;
             // None => No such file
@@ -205,8 +225,10 @@ impl<T: Config> MarketInterface<<T as system::Config>::AccountId, BalanceOf<T>> 
                     file_info.replicas.remove(&owner);
                 }
             }
+            println!("Might remove replics cost {:.2?}", before.elapsed());
 
             // 2. Return the original storage power in wr
+            let before = Instant::now();
             if let Some(is_spower_counted) = is_spower_counted {
                 if is_spower_counted {
                     spower = file_info.spower;
@@ -219,7 +241,10 @@ impl<T: Config> MarketInterface<<T as system::Config>::AccountId, BalanceOf<T>> 
             if to_decrease_count != 0 {
                 file_info.reported_replica_count = file_info.reported_replica_count.saturating_sub(to_decrease_count);
             }
+            println!("Update spower and decrease cost {:.2?}", before.elapsed());
+            let before = Instant::now();
             <FilesV2<T>>::insert(cid, file_info);
+            println!("FilesV2 insert cost {:.2?}", before.elapsed());
         }
         (spower, is_valid_cid)
     }
@@ -1033,7 +1058,10 @@ impl<T: Config> Module<T> {
     }
 
     fn maybe_upsert_file_size(who: &T::AccountId, cid: &MerkleRoot, reported_file_size: u64) {
+        let before = Instant::now();
         if let Some(mut file_info) = Self::filesv2(cid) {
+            println!("get file cost in maybe_upsert_file_size {:.2?}", before.elapsed());
+            let before = Instant::now();
             if file_info.replicas.len().is_zero() {
                 // ordered_file_size == reported_file_size, return it
                 if file_info.file_size == reported_file_size {
@@ -1055,6 +1083,7 @@ impl<T: Config> Module<T> {
                     Self::deposit_event(RawEvent::IllegalFileClosed(cid.clone()));
                 }
             }
+            println!("maybe_upsert_file_size for the first reporter {:.2?}", before.elapsed());
         }
     }
 
